@@ -46,6 +46,7 @@ jobs:
       shell: bash
       run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
     - name: Add GitHub package source
+      shell: bash
       run: dotnet nuget add source https://nuget.pkg.github.com/Crafted-Solutions/index.json -n cs -u ${NUGET_USER} -p ${NUGET_TOKEN} --store-password-in-clear-text
       env:
         NUGET_TOKEN: ${{ secrets.PACKAGE_READ_TOKEN }}
@@ -58,7 +59,7 @@ jobs:
         if [ "${{ matrix.target }}" == "win-x64" ]; then
             7z a -tzip "MarBasGleaner-${VERSION}-${{ matrix.target }}.zip" "./distr/${{ matrix.target }}/*"
         else
-            tar czvf "MarBasGleaner-${VERSION}-${{ matrix.target }}.tar.gz" "./distr/${{ matrix.target }}"
+            tar czvf "MarBasGleaner-${VERSION}-${{ matrix.target }}.tar.gz" -C "./distr/${{ matrix.target }}" .
         fi
 
     - name: Publish to GitHub
