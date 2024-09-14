@@ -1,0 +1,15 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/build
+*.user
+MarBasGleanerDebug.*
+/srcdbg
+tmp
+
+.fake
+.DS_Store
+nuget.config
+/distr

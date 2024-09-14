@@ -1,0 +1,29 @@
+{
+  "profiles": {
+    "mbglean-track": {
+      "commandName": "Project",
+      "commandLineArgs": "track https://localhost:7277 /marbas -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-connect": {
+      "commandName": "Project",
+      "commandLineArgs": "connect https://localhost:7277 -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-status": {
+      "commandName": "Project",
+      "commandLineArgs": "status -d ../../test/tmp/snapshot --show-all",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    }
+  },
+  "$schema": "http://json.schemastore.org/launchsettings.json"
+}
