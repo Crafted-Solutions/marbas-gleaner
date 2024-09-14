@@ -59,7 +59,7 @@ jobs:
         if [ "${{ matrix.target }}" == "win-x64" ]; then
             7z a -tzip "MarBasGleaner-${VERSION}-${{ matrix.target }}.zip" "./distr/${{ matrix.target }}/*"
         else
-            tar czvf "MarBasGleaner-${VERSION}-${{ matrix.target }}.tar.gz" "./distr/${{ matrix.target }}"
+            tar czvf "MarBasGleaner-${VERSION}-${{ matrix.target }}.tar.gz" -C "./distr/${{ matrix.target }}" .
         fi
 
     - name: Publish to GitHub
