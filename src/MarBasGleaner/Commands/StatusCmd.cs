@@ -11,40 +11,39 @@ namespace MarBasGleaner.Commands
     {
         public enum GrainStatus
         {
-            Uptodate, Missing, Obscure, Modified, New, Deleted
+            Uptodate, Missing, Obscure, Ignored, Modified, New, Deleted
         }
 
         public StatusCmd()
             : base("status", "Shows status of MarBas grains in a tracking snapshot")
         {
-            AddOption(DirectoryOpion);
+            Setup();
+        }
+
+        protected override void Setup()
+        {
+            base.Setup();
             AddOption(new Option<bool>("--show-all", "List all grains, even unmodified ones"));
         }
 
-        public class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ICommandHandler
+        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
-            private readonly ITrackingService _trackingService = trackingService;
-            private readonly ILogger<Worker> _logger = logger;
 
-            public string Directory { get; set; } = SnapshotDirectory.DefaultPath;
             public bool ShowAll { get; set; }
 
-            public int Invoke(InvocationContext context)
-            {
-                return InvokeAsync(context).Result;
-            }
-
-            public async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(InvocationContext context)
             {
                 var ctoken = context.GetCancellationToken();
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
-                if (!snapshotDir.IsDirectory || !snapshotDir.IsSnapshot)
+
+                var result = CheckSnapshot(snapshotDir);
+                if (0 != result)
                 {
-                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' contains no tracking snapshots");
+                    return result;
                 }
-                if (!snapshotDir.IsConnected)
+                if (null == snapshotDir.LocalCheckpoint || null == snapshotDir.SharedCheckpoint)
                 {
-                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' is not connected to broker, execute 'connect' first");
+                    return ReportError(CmdResultCode.SnapshotStateError, $"Snapshot checkpoints are missing, delete {SnapshotDirectory.LocalStateFile} and execute 'connect' command");
                 }
 
                 using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
@@ -55,35 +54,23 @@ namespace MarBasGleaner.Commands
                     return (int)brokerStat.Code;
                 }
 
-                Console.WriteLine("Comparing snapshot {0} with {1}", snapshotDir.FullPath, client.APIUrl);
-                Console.WriteLine(SeparatorLine);
+                DisplayMessage($"Comparing snapshot {snapshotDir.FullPath} with {client.APIUrl}", MessageSeparatorOption.After);
+
+                bool isCheckpointInSync = snapshotDir.LocalCheckpoint.IsSame(snapshotDir.SharedCheckpoint);
+                if (!isCheckpointInSync)
+                {
+                    DisplayWarning("Snapshot has been modified externally, results may be inaccurate");
+                }
 
                 var rootId = (Guid)(snapshotDir.LocalSnapshot?.AnchorId!);
-                
-                var brokerMods = await client.ListGrains(rootId, SnapshotScope.Recursive == (snapshotDir.LocalSnapshot.Scope & SnapshotScope.Recursive), mtimeFrom: snapshotDir.LocalSnapshot.Latest, cancellationToken: ctoken);
+
+                var brokerMods = await client.ListGrains(rootId, SnapshotScope.Recursive == (snapshotDir.LocalSnapshot.Scope & SnapshotScope.Recursive),
+                    mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.LocalSnapshot.Scope), cancellationToken: ctoken);
                 var brokerModHash = new Dictionary<Guid, IGrain>(brokerMods.Select(x => new KeyValuePair<Guid, IGrain>(x.Id, x)));
-                if (SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.LocalSnapshot.Scope))
-                {
-                    var anchor = await client.GetGrain(rootId, ctoken);
-                    if (null != anchor && snapshotDir.LocalSnapshot.Latest < anchor.MTime)
-                    {
-                        brokerModHash.Add(anchor.Id, anchor);
-                    }
-                }
 
-                var deletions = snapshotDir.LocalSnapshot.DeadGrains;
-                var remainingAdditions = snapshotDir.LocalSnapshot.AliveGrains;
-                // TODO do we need a copy of LocalSnapshot.AliveGrains?
-                //remainingAdditions = new HashSet<Guid>(snapshotDir.LocalSnapshot.AliveGrains);
-                if (true == snapshotDir.SharedSnapshot?.DeadGrains.Any())
-                {
-                    remainingAdditions.ExceptWith(snapshotDir.SharedSnapshot.DeadGrains);
-                    deletions.UnionWith(snapshotDir.SharedSnapshot.DeadGrains);
-                }
+                var intCheckpoint = await snapshotDir.LoadIntegratedCheckpoint(ctoken);
 
-
-                var result = 0;
-                await foreach(var grain in snapshotDir.ListGrains<GrainTransportable>(ctoken))
+                await foreach (var grain in snapshotDir.ListGrains<GrainTransportable>(ctoken))
                 {
                     if (null != grain)
                     {
@@ -91,30 +78,34 @@ namespace MarBasGleaner.Commands
                         if (brokerModHash.ContainsKey(grain.Id))
                         {
                             status[1] = GrainStatus.Modified;
+                            if (brokerModHash[grain.Id].MTime < grain.MTime)
+                            {
+                                status[0] = GrainStatus.Modified;
+                            }
                             brokerModHash.Remove(grain.Id);
                         }
 
-                        if (!remainingAdditions.Contains(grain.Id))
+                        if (!intCheckpoint.Additions.Contains(grain.Id))
                         {
-                            status[0] = snapshotDir.SharedSnapshot!.AliveGrains.Contains(grain.Id) ? GrainStatus.New : GrainStatus.Obscure;
+                            status[0] = snapshotDir.SharedCheckpoint.Additions.Contains(grain.Id) ? GrainStatus.New : GrainStatus.Obscure;
                         }
-                        else if (deletions.Contains(grain.Id))
+                        else if (intCheckpoint.Deletions.Contains(grain.Id))
                         {
-                            status[0] = GrainStatus.Deleted;
+                            status[0] = GrainStatus.Obscure;
                         }
-                        else if (grain.MTime > snapshotDir.LocalSnapshot.Latest)
+                        else if (grain.MTime > snapshotDir.LocalCheckpoint.Latest)
                         {
                             status[0] = GrainStatus.Modified;
                         }
 
                         if (0 == result && GrainStatus.Uptodate < (status[0] | status[1]))
                         {
-                            result = 42;
+                            result = (int)CmdResultCode.SnapshotStatusOutofdate;
                         }
                         PrintGrainInfo(grain, status[0], status[1]);
 
-                        remainingAdditions.Remove(grain.Id);
-                        deletions.Remove(grain.Id);
+                        intCheckpoint.Additions.Remove(grain.Id);
+                        intCheckpoint.Deletions.Remove(grain.Id);
                     }
                 }
 
@@ -128,7 +119,7 @@ namespace MarBasGleaner.Commands
                     };
                 };
 
-                foreach (var id in remainingAdditions)
+                foreach (var id in intCheckpoint.Additions)
                 {
                     var grain = await client.GetGrain(id, ctoken);
                     if (null == grain)
@@ -140,14 +131,10 @@ namespace MarBasGleaner.Commands
                         PrintGrainInfo(grain, GrainStatus.Missing);
                     }
                 }
-                foreach (var id in deletions)
+                foreach (var id in intCheckpoint.Deletions)
                 {
                     var grain = await client.GetGrain(id, ctoken);
-                    if (null == grain)
-                    {
-                        PrintGrainInfo(DeletedGrain(id), GrainStatus.Deleted, GrainStatus.Deleted);
-                    }
-                    else
+                    if (null != grain)
                     {
                         PrintGrainInfo(grain, GrainStatus.Deleted);
                     }
@@ -155,16 +142,15 @@ namespace MarBasGleaner.Commands
 
                 foreach (var entry in brokerModHash)
                 {
-                    PrintGrainInfo(entry.Value, statusBroker: GrainStatus.New);
+                    PrintGrainInfo(entry.Value, statusBroker: snapshotDir.IsIgnoredGrain(entry.Value) ? GrainStatus.Ignored : GrainStatus.New);
                 }
                 if (0 == result)
                 {
-                    ReportInfo($"Snapshot {snapshotDir.LocalSnapshot.InstanceId:D} is uptodate");
+                    DisplayInfo($"Snapshot {snapshotDir.LocalSnapshot.InstanceId:D} is uptodate");
                 }
                 else
                 {
-                    Console.WriteLine(SeparatorLine);
-                    Console.WriteLine("Status legend (left side - snapshot, right side - broker):");
+                    DisplayMessage("Status legend (left side - snapshot, right side - broker):", MessageSeparatorOption.Before);
                     var legend = string.Empty;
                     for (var s = GrainStatus.Missing; s <= GrainStatus.Deleted; s++)
                     {
@@ -174,7 +160,7 @@ namespace MarBasGleaner.Commands
                         }
                         legend += $"[{GetStatusIndicator(s)}] - {Enum.GetName(s)}";
                     }
-                    Console.WriteLine(legend);
+                    DisplayMessage(legend);
                 }
                 return result;
             }
@@ -199,6 +185,7 @@ namespace MarBasGleaner.Commands
                                     GrainStatus.Modified => ConsoleColor.Cyan,
                                     GrainStatus.New => ConsoleColor.Green,
                                     GrainStatus.Deleted => ConsoleColor.Red,
+                                    GrainStatus.Ignored => ConsoleColor.Gray,
                                     GrainStatus.Missing or GrainStatus.Obscure => ConsoleColor.Magenta,
                                     _ => throw new NotImplementedException()
                                 };
@@ -210,6 +197,7 @@ namespace MarBasGleaner.Commands
                                     GrainStatus.Modified => ConsoleColor.DarkCyan,
                                     GrainStatus.New => ConsoleColor.DarkGreen,
                                     GrainStatus.Deleted => ConsoleColor.DarkRed,
+                                    GrainStatus.Ignored => ConsoleColor.DarkGray,
                                     GrainStatus.Missing or GrainStatus.Obscure => ConsoleColor.DarkMagenta,
                                     _ => throw new NotImplementedException()
                                 };
@@ -217,7 +205,7 @@ namespace MarBasGleaner.Commands
 
                         }
                         
-                        Console.WriteLine($"[{GetStatusIndicator(statusSnapshot)}{GetStatusIndicator(statusBroker)}] {grain.Id} ({grain.Path ?? "\\"})");
+                        Console.Write($"[{GetStatusIndicator(statusSnapshot)}{GetStatusIndicator(statusBroker)}] {grain.Id} ({grain.Path ?? "\\"}){Environment.NewLine}");
                     }
                     finally
                     {

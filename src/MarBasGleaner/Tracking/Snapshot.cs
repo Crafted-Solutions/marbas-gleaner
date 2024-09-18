@@ -12,9 +12,7 @@ namespace MarBasGleaner.Tracking
         [IgnoreDataMember]
         public Guid AnchorId => Anchor.LastOrDefault();
         public SnapshotScope Scope { get; set; } = SnapshotScope.Recursive;
-        public DateTime Latest { get; set; }
         public DateTime Updated { get; set; }
-        public ISet<Guid> DeadGrains { get; set; } = new HashSet<Guid>();
-        public ISet<Guid> AliveGrains { get; set; } = new HashSet<Guid>();
+        public int Checkpoint { get; set; }
     }
 }

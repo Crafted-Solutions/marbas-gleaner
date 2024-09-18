@@ -6,12 +6,12 @@ using MarBasSchema.Broker;
 
 namespace MarBasGleaner.Commands
 {
-    internal class TrackCmd: ConnectCmd
+    internal class TrackCmd(): ConnectCmd("track", "Sets up tracking of MarBas grains in local directory")
     {
-        public TrackCmd()
-            : base("track", "Sets up tracking of MarBas grains in local directory")
-        {
-        }
+        //public TrackCmd()
+        //    : base("track", "Sets up tracking of MarBas grains in local directory")
+        //{
+        //}
 
         protected override void Setup()
         {
@@ -36,7 +36,7 @@ namespace MarBasGleaner.Commands
             });
         }
 
-        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectCmd.Worker(trackingService, logger)
+        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectCmd.Worker(trackingService, (ILogger)logger)
         {
             public string? PathOrId { get; set; }
             public SnapshotScope Scope { get; set; } = SnapshotScope.Recursive;
@@ -79,8 +79,7 @@ namespace MarBasGleaner.Commands
                     _logger.LogDebug("TrackCmd: SnapshotDirectory={fullPath}, Url={url}", snapshotDir.FullPath, Url);
                 }
 
-                Console.WriteLine("Setting up tracking of {0} in {1}", Url, snapshotDir.FullPath);
-                Console.WriteLine(SeparatorLine);
+                DisplayMessage($"Setting up tracking of {Url} in {snapshotDir.FullPath}", MessageSeparatorOption.After);
 
                 var snapshot = new Snapshot()
                 {
@@ -104,12 +103,12 @@ namespace MarBasGleaner.Commands
                 {
                     return ReportError(CmdResultCode.AnchorGrainError, $"Anchor grain '{PathOrId}' could not be loaded");
                 }
-                snapshot.Latest = anchor.MTime;
+                var latest = anchor.MTime;
 
                 snapshot.Anchor = (await client.GetGrainPath(anchor.Id, ctoken)).Select(grain => grain.Id);
 
 
-                var grains = await client.ListGrains(anchor.Id, SnapshotScope.Recursive == (Scope & SnapshotScope.Recursive), cancellationToken: ctoken);
+                var grains = await client.ListGrains(anchor.Id, SnapshotScope.Recursive == (SnapshotScope.Recursive & Scope), cancellationToken: ctoken);
 
                 try
                 {
@@ -132,12 +131,19 @@ namespace MarBasGleaner.Commands
 
                 if (SnapshotScope.Anchor == (Scope & SnapshotScope.Anchor))
                 {
-                    var anchorExported = (await client.ImportGrains(new[] { anchor.Id }, ctoken)).FirstOrDefault();
-                    if (null == anchorExported)
+                    if (snapshotDir.IsIgnoredGrain(anchor))
                     {
-                        return ReportError(CmdResultCode.AnchorGrainError, $"Anchor grain {anchor.Id} doesn't seem to be exportable");
+                        DisplayWarning($"Anchor grain {anchor.Id} is in the ignore list");
                     }
-                    await snapshotDir.StoreGrain(anchorExported, cancellationToken: ctoken);
+                    else
+                    {
+                        var anchorImp = (await client.ImportGrains(new[] { anchor.Id }, ctoken)).FirstOrDefault();
+                        if (null == anchorImp)
+                        {
+                            return ReportError(CmdResultCode.AnchorGrainError, $"Anchor grain {anchor.Id} doesn't seem to be exportable");
+                        }
+                        await snapshotDir.StoreGrain(anchorImp, cancellationToken: ctoken);
+                    }
                 }
 
                 var ignoredParents = new HashSet<Guid>();
@@ -153,9 +159,9 @@ namespace MarBasGleaner.Commands
                         return false;
                     }
 
-                    if (grain.MTime > snapshot.Latest)
+                    if (grain.MTime > latest)
                     {
-                        snapshot.Latest = grain.MTime;
+                        latest = grain.MTime;
                     }
                     return true;
                 }).Select(x => x.Id);
@@ -166,9 +172,11 @@ namespace MarBasGleaner.Commands
                     await snapshotDir.StoreGrain(grain, cancellationToken: token);
                 });
 
-                snapshotDir.LocalSnapshot!.Latest = snapshot.Latest;
+                snapshotDir.LocalCheckpoint!.Latest = latest;
                 snapshotDir.LocalSnapshot!.Updated = snapshot.Updated = DateTime.UtcNow;
-                await snapshotDir.StoreMetadata(ctoken);
+                await snapshotDir.StoreMetadata(cancellationToken: ctoken);
+
+                DisplayInfo($"Snapshot of {Url} created successfully");
                 return 0;
             }
 

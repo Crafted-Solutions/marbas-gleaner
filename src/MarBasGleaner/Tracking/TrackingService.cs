@@ -3,7 +3,7 @@ using MarBasGleaner.BrokerAPI.Auth;
 
 namespace MarBasGleaner.Tracking
 {
-    internal class TrackingService(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider) : ITrackingService
+    internal sealed class TrackingService(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider) : ITrackingService
     {
         private readonly IDictionary<string, SnapshotDirectory> _snapshots = new Dictionary<string, SnapshotDirectory>();
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;

@@ -20,41 +20,33 @@ namespace MarBasGleaner.Commands
             Setup();
         }
 
-        protected virtual void Setup()
+        protected override void Setup()
         {
             AddArgument(new Argument<Uri>("url", "Broker URL"));
-            AddOption(DirectoryOpion);
+            base.Setup();
             AddOption(new Option<string>("--auth", () => BasicAuthenticator.SchemeName, "Authentication type to use with MarBas broker connection"));
+            AddOption(new Option<int>("--adopt-checkpoint", () => 0, "Adopt specified checkpoint (-1 for latest) as current one for this connection"));
         }
 
-        public class Worker : ICommandHandler
+        public new class Worker : GenericCmd.Worker
         {
-            protected readonly ILogger _logger;
-            protected readonly ITrackingService _trackingService;
-
             public Worker(ITrackingService trackingService, ILogger<Worker> logger)
+                : base(trackingService, (ILogger)logger)
             {
-                _logger = logger;
-                _trackingService = trackingService;
+
             }
 
             protected Worker(ITrackingService trackingService, ILogger logger)
+                : base(trackingService, logger)
             {
-                _logger = logger;
-                _trackingService = trackingService;
             }
 
             public Uri? Url { get; set; }
             public string Auth { get; set; } = BasicAuthenticator.SchemeName;
-            public string Directory { get; set; } = SnapshotDirectory.DefaultPath;
+            public int AdoptCheckpoint { get; set; } = 0;
+ 
 
-
-            public int Invoke(InvocationContext context)
-            {
-                return InvokeAsync(context).Result;
-            }
-
-            public virtual async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(InvocationContext context)
             {
                 if (null == Url || !Url.IsAbsoluteUri)
                 {
@@ -69,7 +61,7 @@ namespace MarBasGleaner.Commands
                 }
                 if (snapshotDir.IsConnected)
                 {
-                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.IsConnected}' is already tracking '{snapshotDir.ConnectionSettings?.BrokerUrl}'");
+                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' is already tracking '{snapshotDir.ConnectionSettings?.BrokerUrl}'");
                 }
 
                 if (_logger.IsEnabled(LogLevel.Debug))
@@ -77,8 +69,7 @@ namespace MarBasGleaner.Commands
                     _logger.LogDebug("ConnectCmd: SnapshotDirectory={fullPath}, Url={url}", snapshotDir.FullPath, Url);
                 }
 
-                Console.WriteLine("Connecting {0} with snapshot {1}", Url, snapshotDir.FullPath);
-                Console.WriteLine(SeparatorLine);
+                DisplayMessage($"Connecting {Url} with snapshot {snapshotDir.FullPath}", MessageSeparatorOption.After);
 
                 Guid instanceId = Guid.Empty;
                 var connection = CreateConnectionSettings();
@@ -97,7 +88,8 @@ namespace MarBasGleaner.Commands
 
                 try
                 {
-                    await snapshotDir.Connect(connection, instanceId, cancellationToken: ctoken);
+                    await snapshotDir.Connect(connection, instanceId, AdoptCheckpoint, cancellationToken: ctoken);
+                    DisplayInfo($"Snapshot successfully connected to '{Url}'");
                 }
                 catch (Exception e)
                 {
@@ -105,7 +97,6 @@ namespace MarBasGleaner.Commands
                     {
                         _logger.LogError(e, "Snapshot connect error");
                     }
-                    snapshotDir.CleanUp();
                     return ReportError(CmdResultCode.SnapshotInitError, $"Error connecting snapshot '{snapshotDir.FullPath}' with {Url}: {e.Message}");
                 }
 
