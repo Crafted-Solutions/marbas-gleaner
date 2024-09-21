@@ -9,112 +9,94 @@ namespace MarBasGleaner.Commands
 
     internal class StatusCmd : GenericCmd
     {
-        public enum GrainStatus
-        {
-            Uptodate, Missing, Obscure, Modified, New, Deleted
-        }
-
         public StatusCmd()
             : base("status", "Shows status of MarBas grains in a tracking snapshot")
         {
-            AddOption(DirectoryOpion);
+            Setup();
+        }
+
+        protected override void Setup()
+        {
+            base.Setup();
             AddOption(new Option<bool>("--show-all", "List all grains, even unmodified ones"));
         }
 
-        public class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ICommandHandler
+        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
-            private readonly ITrackingService _trackingService = trackingService;
-            private readonly ILogger<Worker> _logger = logger;
 
-            public string Directory { get; set; } = SnapshotDirectory.DefaultPath;
             public bool ShowAll { get; set; }
 
-            public int Invoke(InvocationContext context)
-            {
-                return InvokeAsync(context).Result;
-            }
-
-            public async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(InvocationContext context)
             {
                 var ctoken = context.GetCancellationToken();
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
-                if (!snapshotDir.IsDirectory || !snapshotDir.IsSnapshot)
+
+                var result = CheckSnapshot(snapshotDir);
+                if (0 != result)
                 {
-                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' contains no tracking snapshots");
-                }
-                if (!snapshotDir.IsConnected)
-                {
-                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' is not connected to broker, execute 'connect' first");
+                    return result;
                 }
 
                 using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
 
-                var brokerStat = await CheckBrokerConnection(client, snapshotDir.SharedSnapshot?.SchemaVersion, ctoken);
+                var brokerStat = await CheckBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
 
-                Console.WriteLine("Comparing snapshot {0} with {1}", snapshotDir.FullPath, client.APIUrl);
-                Console.WriteLine(SeparatorLine);
+                DisplayMessage($"Comparing snapshot {snapshotDir.FullPath} with {client.APIUrl}", MessageSeparatorOption.After);
 
-                var rootId = (Guid)(snapshotDir.LocalSnapshot?.AnchorId!);
-                
-                var brokerMods = await client.ListGrains(rootId, SnapshotScope.Recursive == (snapshotDir.LocalSnapshot.Scope & SnapshotScope.Recursive), mtimeFrom: snapshotDir.LocalSnapshot.Latest, cancellationToken: ctoken);
+                bool isCheckpointInSync = snapshotDir.LocalCheckpoint!.IsSame(snapshotDir.SharedCheckpoint);
+                if (!isCheckpointInSync)
+                {
+                    DisplayWarning("Snapshot has been modified externally, results may be inaccurate");
+                }
+
+                var rootId = (Guid)(snapshotDir.Snapshot?.AnchorId!);
+
+                var brokerMods = await client.ListGrains(rootId, SnapshotScope.Recursive == (snapshotDir.Snapshot.Scope & SnapshotScope.Recursive),
+                    mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: ctoken);
                 var brokerModHash = new Dictionary<Guid, IGrain>(brokerMods.Select(x => new KeyValuePair<Guid, IGrain>(x.Id, x)));
-                if (SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.LocalSnapshot.Scope))
-                {
-                    var anchor = await client.GetGrain(rootId, ctoken);
-                    if (null != anchor && snapshotDir.LocalSnapshot.Latest < anchor.MTime)
-                    {
-                        brokerModHash.Add(anchor.Id, anchor);
-                    }
-                }
 
-                var deletions = snapshotDir.LocalSnapshot.DeadGrains;
-                var remainingAdditions = snapshotDir.LocalSnapshot.AliveGrains;
-                // TODO do we need a copy of LocalSnapshot.AliveGrains?
-                //remainingAdditions = new HashSet<Guid>(snapshotDir.LocalSnapshot.AliveGrains);
-                if (true == snapshotDir.SharedSnapshot?.DeadGrains.Any())
-                {
-                    remainingAdditions.ExceptWith(snapshotDir.SharedSnapshot.DeadGrains);
-                    deletions.UnionWith(snapshotDir.SharedSnapshot.DeadGrains);
-                }
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(ctoken);
 
-
-                var result = 0;
-                await foreach(var grain in snapshotDir.ListGrains<GrainTransportable>(ctoken))
+                await foreach (var grain in snapshotDir.ListGrains<GrainTransportable>(cancellationToken: ctoken))
                 {
                     if (null != grain)
                     {
-                        var status = new[] { GrainStatus.Uptodate, GrainStatus.Uptodate };
-                        if (brokerModHash.ContainsKey(grain.Id))
+                        var status = new[] { GrainTrackingStatus.Uptodate, GrainTrackingStatus.Uptodate };
+                        if (brokerModHash.TryGetValue(grain.Id, out IGrain? value))
                         {
-                            status[1] = GrainStatus.Modified;
+                            status[1] = GrainTrackingStatus.Modified;
+                            if (value.MTime < grain.MTime)
+                            {
+                                status[0] = GrainTrackingStatus.Modified;
+                            }
                             brokerModHash.Remove(grain.Id);
                         }
 
-                        if (!remainingAdditions.Contains(grain.Id))
+                        if (!conflated.Additions.Contains(grain.Id))
                         {
-                            status[0] = snapshotDir.SharedSnapshot!.AliveGrains.Contains(grain.Id) ? GrainStatus.New : GrainStatus.Obscure;
+                            status[0] = snapshotDir.SharedCheckpoint!.Additions.Contains(grain.Id) ? GrainTrackingStatus.New : GrainTrackingStatus.Obscure;
                         }
-                        else if (deletions.Contains(grain.Id))
+                        else if (conflated.Deletions.Contains(grain.Id))
                         {
-                            status[0] = GrainStatus.Deleted;
+                            status[0] = GrainTrackingStatus.Obscure;
                         }
-                        else if (grain.MTime > snapshotDir.LocalSnapshot.Latest)
+                        else if (grain.MTime > snapshotDir.LocalCheckpoint.Latest)
                         {
-                            status[0] = GrainStatus.Modified;
+                            status[0] = GrainTrackingStatus.Modified;
                         }
 
-                        if (0 == result && GrainStatus.Uptodate < (status[0] | status[1]))
+                        if (0 == result && GrainTrackingStatus.Uptodate < (status[0] | status[1]))
                         {
-                            result = 42;
+                            result = (int)CmdResultCode.SnapshotStatusOutofdate;
                         }
                         PrintGrainInfo(grain, status[0], status[1]);
 
-                        remainingAdditions.Remove(grain.Id);
-                        deletions.Remove(grain.Id);
+                        conflated.Additions.Remove(grain.Id);
+                        conflated.Deletions.Remove(grain.Id);
                     }
                 }
 
@@ -128,45 +110,40 @@ namespace MarBasGleaner.Commands
                     };
                 };
 
-                foreach (var id in remainingAdditions)
+                foreach (var id in conflated.Additions)
                 {
                     var grain = await client.GetGrain(id, ctoken);
                     if (null == grain)
                     {
-                        PrintGrainInfo(DeletedGrain(id), statusBroker: GrainStatus.Deleted);
+                        PrintGrainInfo(DeletedGrain(id), statusBroker: GrainTrackingStatus.Deleted);
                     }
                     else
                     {
-                        PrintGrainInfo(grain, GrainStatus.Missing);
+                        PrintGrainInfo(grain, GrainTrackingStatus.Missing);
                     }
                 }
-                foreach (var id in deletions)
+                foreach (var id in conflated.Deletions)
                 {
                     var grain = await client.GetGrain(id, ctoken);
-                    if (null == grain)
+                    if (null != grain)
                     {
-                        PrintGrainInfo(DeletedGrain(id), GrainStatus.Deleted, GrainStatus.Deleted);
-                    }
-                    else
-                    {
-                        PrintGrainInfo(grain, GrainStatus.Deleted);
+                        PrintGrainInfo(grain, GrainTrackingStatus.Deleted);
                     }
                 }
 
                 foreach (var entry in brokerModHash)
                 {
-                    PrintGrainInfo(entry.Value, statusBroker: GrainStatus.New);
+                    PrintGrainInfo(entry.Value, statusBroker: snapshotDir.IsIgnoredGrain(entry.Value) ? GrainTrackingStatus.Ignored : GrainTrackingStatus.New);
                 }
                 if (0 == result)
                 {
-                    ReportInfo($"Snapshot {snapshotDir.LocalSnapshot.InstanceId:D} is uptodate");
+                    DisplayInfo($"Snapshot {snapshotDir.FullPath} is uptodate");
                 }
                 else
                 {
-                    Console.WriteLine(SeparatorLine);
-                    Console.WriteLine("Status legend (left side - snapshot, right side - broker):");
+                    DisplayMessage("Status legend (left side - snapshot, right side - broker):", MessageSeparatorOption.Before);
                     var legend = string.Empty;
-                    for (var s = GrainStatus.Missing; s <= GrainStatus.Deleted; s++)
+                    for (var s = GrainTrackingStatus.Missing; s <= GrainTrackingStatus.Deleted; s++)
                     {
                         if (0 < legend.Length)
                         {
@@ -174,50 +151,52 @@ namespace MarBasGleaner.Commands
                         }
                         legend += $"[{GetStatusIndicator(s)}] - {Enum.GetName(s)}";
                     }
-                    Console.WriteLine(legend);
+                    DisplayMessage(legend);
                 }
                 return result;
             }
 
-            private void PrintGrainInfo(IGrain grain, GrainStatus statusSnapshot = GrainStatus.Uptodate, GrainStatus statusBroker = GrainStatus.Uptodate)
+            private void PrintGrainInfo(IGrain grain, GrainTrackingStatus statusSnapshot = GrainTrackingStatus.Uptodate, GrainTrackingStatus statusBroker = GrainTrackingStatus.Uptodate)
             {
-                if (ShowAll || GrainStatus.Uptodate < (statusSnapshot | statusBroker))
+                if (ShowAll || GrainTrackingStatus.Uptodate < (statusSnapshot | statusBroker))
                 {
-                    var mod = GrainStatus.Uptodate < (statusSnapshot | statusBroker);
+                    var mod = GrainTrackingStatus.Uptodate < (statusSnapshot | statusBroker);
                     try
                     {
-                        if (GrainStatus.Uptodate < statusSnapshot && GrainStatus.Uptodate < statusBroker)
+                        if (GrainTrackingStatus.Uptodate < statusSnapshot && GrainTrackingStatus.Uptodate < statusBroker)
                         {
                             Console.ForegroundColor = ConsoleColor.Yellow;
                         }
                         else
                         {
-                            if (GrainStatus.Uptodate < statusSnapshot)
+                            if (GrainTrackingStatus.Uptodate < statusSnapshot)
                             {
                                 Console.ForegroundColor = statusSnapshot switch
                                 {
-                                    GrainStatus.Modified => ConsoleColor.Cyan,
-                                    GrainStatus.New => ConsoleColor.Green,
-                                    GrainStatus.Deleted => ConsoleColor.Red,
-                                    GrainStatus.Missing or GrainStatus.Obscure => ConsoleColor.Magenta,
+                                    GrainTrackingStatus.Modified => ConsoleColor.Cyan,
+                                    GrainTrackingStatus.New => ConsoleColor.Green,
+                                    GrainTrackingStatus.Deleted => ConsoleColor.Red,
+                                    GrainTrackingStatus.Ignored => ConsoleColor.Gray,
+                                    GrainTrackingStatus.Missing or GrainTrackingStatus.Obscure => ConsoleColor.Magenta,
                                     _ => throw new NotImplementedException()
                                 };
                             }
-                            else if (GrainStatus.Uptodate < statusBroker)
+                            else if (GrainTrackingStatus.Uptodate < statusBroker)
                             {
                                 Console.ForegroundColor = statusBroker switch
                                 {
-                                    GrainStatus.Modified => ConsoleColor.DarkCyan,
-                                    GrainStatus.New => ConsoleColor.DarkGreen,
-                                    GrainStatus.Deleted => ConsoleColor.DarkRed,
-                                    GrainStatus.Missing or GrainStatus.Obscure => ConsoleColor.DarkMagenta,
+                                    GrainTrackingStatus.Modified => ConsoleColor.DarkCyan,
+                                    GrainTrackingStatus.New => ConsoleColor.DarkGreen,
+                                    GrainTrackingStatus.Deleted => ConsoleColor.DarkRed,
+                                    GrainTrackingStatus.Ignored => ConsoleColor.DarkGray,
+                                    GrainTrackingStatus.Missing or GrainTrackingStatus.Obscure => ConsoleColor.DarkMagenta,
                                     _ => throw new NotImplementedException()
                                 };
                             }
 
                         }
                         
-                        Console.WriteLine($"[{GetStatusIndicator(statusSnapshot)}{GetStatusIndicator(statusBroker)}] {grain.Id} ({grain.Path ?? "\\"})");
+                        Console.Write($"[{GetStatusIndicator(statusSnapshot)}{GetStatusIndicator(statusBroker)}] {grain.Id} ({grain.Path ?? "\\"}){Environment.NewLine}");
                     }
                     finally
                     {
@@ -229,14 +208,14 @@ namespace MarBasGleaner.Commands
                 }
             }
 
-            private static string GetStatusIndicator(GrainStatus status)
+            private static string GetStatusIndicator(GrainTrackingStatus status)
             {
                 var result = Enum.GetName(status)?[..1] ?? "#";
-                if (GrainStatus.Uptodate == status)
+                if (GrainTrackingStatus.Uptodate == status)
                 {
                     result = " ";
                 }
-                else if (GrainStatus.Missing == status)
+                else if (GrainTrackingStatus.Missing == status)
                 {
                     result = "!";
                 }

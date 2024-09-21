@@ -22,7 +22,8 @@ namespace MarBasGleaner
                 })
                 .UseCommandHandler<TrackCmd, TrackCmd.Worker>()
                 .UseCommandHandler<ConnectCmd, ConnectCmd.Worker>()
-                .UseCommandHandler<StatusCmd, StatusCmd.Worker>();
+                .UseCommandHandler<StatusCmd, StatusCmd.Worker>()
+                .UseCommandHandler<PullCmd, PullCmd.Worker>();
             }).UseDefaults().Build();
 
             return await runner.InvokeAsync(args);
@@ -34,6 +35,7 @@ namespace MarBasGleaner
             rootCmd.AddCommand(new TrackCmd());
             rootCmd.AddCommand(new ConnectCmd());
             rootCmd.AddCommand(new StatusCmd());
+            rootCmd.AddCommand(new PullCmd());
             return new CommandLineBuilder(rootCmd);
         }
     }

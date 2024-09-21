@@ -8,6 +8,7 @@
         BrokerConnectionError = 1,
         SchemaVersionError = 2,
         AnchorGrainError = 3,
-        SnapshotInitError = 4
+        SnapshotInitError = 4,
+        SnapshotStatusOutofdate = 42
     }
 }

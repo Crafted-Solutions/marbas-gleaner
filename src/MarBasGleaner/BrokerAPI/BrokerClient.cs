@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Collections.Immutable;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
 using MarBasGleaner.BrokerAPI.Models;
@@ -10,7 +11,7 @@ using MarBasSchema.Transport;
 
 namespace MarBasGleaner.BrokerAPI
 {
-    internal class BrokerClient(HttpClient httpClient, ILogger<BrokerClient> logger) : IBrokerClient
+    internal sealed class BrokerClient(HttpClient httpClient, ILogger<BrokerClient> logger) : IBrokerClient
     {
         private static readonly JsonSerializerOptions JsonOptions = new(JsonDefaults.SerializationOptions) { WriteIndented = false };
 
@@ -73,9 +74,30 @@ namespace MarBasGleaner.BrokerAPI
             return null;
         }
 
-        public async Task<IEnumerable<IGrain>> ListGrains(Guid parentId, bool resursive = false, DateTime? mtimeFrom = null, DateTime? mtimeTo = null, CancellationToken cancellationToken = default)
+        public async Task<IDictionary<Guid, bool>> CheckGrainsExist(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
         {
-            var result = Enumerable.Empty<IGrain>();
+            if (cancellationToken.IsCancellationRequested || !ids.Any())
+            {
+                return ImmutableDictionary<Guid, bool>.Empty;
+            }
+
+
+            var result = new Dictionary<Guid, bool>(ids.Select(x => new KeyValuePair<Guid, bool>(x, false)));
+            // TODO use Grain/Exists API when implemented
+            await Parallel.ForEachAsync(ids, cancellationToken, async (id, token) =>
+            {
+                if (null != await GetGrain(id, token))
+                {
+                    result[id] = true;
+                }
+            });
+
+            return result;
+        }
+
+        public async Task<IEnumerable<IGrain>> ListGrains(Guid parentId, bool resursive = false, DateTime? mtimeFrom = null, DateTime? mtimeTo = null, bool includeParent = false, CancellationToken cancellationToken = default)
+        {
+            IEnumerable<IGrain> result = new List<IGrain>();
             if (cancellationToken.IsCancellationRequested)
             {
                 return result;
@@ -101,6 +123,14 @@ namespace MarBasGleaner.BrokerAPI
                 if (null != mbresult && mbresult.Success && null != mbresult.Yield)
                 {
                     result = mbresult.Yield;
+                }
+            }
+            if (includeParent)
+            {
+                var parent = await GetGrain(parentId, cancellationToken);
+                if (null != parent && (null == mtimeFrom || parent.MTime > mtimeFrom) && (null == mtimeTo || parent.MTime < mtimeTo))
+                {
+                    result = result.Prepend(parent);
                 }
             }
             return result;
@@ -152,7 +182,7 @@ namespace MarBasGleaner.BrokerAPI
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed)
                 return;
