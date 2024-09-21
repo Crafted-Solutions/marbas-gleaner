@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Collections.Immutable;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
 using MarBasGleaner.BrokerAPI.Models;
@@ -71,6 +72,27 @@ namespace MarBasGleaner.BrokerAPI
                 }
             }
             return null;
+        }
+
+        public async Task<IDictionary<Guid, bool>> CheckGrainsExist(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested || !ids.Any())
+            {
+                return ImmutableDictionary<Guid, bool>.Empty;
+            }
+
+
+            var result = new Dictionary<Guid, bool>(ids.Select(x => new KeyValuePair<Guid, bool>(x, false)));
+            // TODO use Grain/Exists API when implemented
+            await Parallel.ForEachAsync(ids, cancellationToken, async (id, token) =>
+            {
+                if (null != await GetGrain(id, token))
+                {
+                    result[id] = true;
+                }
+            });
+
+            return result;
         }
 
         public async Task<IEnumerable<IGrain>> ListGrains(Guid parentId, bool resursive = false, DateTime? mtimeFrom = null, DateTime? mtimeTo = null, bool includeParent = false, CancellationToken cancellationToken = default)

@@ -6,7 +6,6 @@ namespace MarBasGleaner.Tracking
     internal class Snapshot
     {
         public Version? SchemaVersion { get; set; }
-        public Guid InstanceId { get; set; } = Guid.Empty;
         public IEnumerable<Guid> Anchor { get; set; } = Array.Empty<Guid>();
         [JsonIgnore]
         [IgnoreDataMember]

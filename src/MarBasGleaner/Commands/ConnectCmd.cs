@@ -75,7 +75,7 @@ namespace MarBasGleaner.Commands
                 var connection = CreateConnectionSettings();
                 using (var client = _trackingService.GetBrokerClient(connection))
                 {
-                    var brokerStat = await CheckBrokerConnection(client, snapshotDir.SharedSnapshot?.SchemaVersion, ctoken);
+                    var brokerStat = await CheckBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
                     if (CmdResultCode.Success != brokerStat.Code)
                     {
                         return (int)brokerStat.Code;
@@ -97,6 +97,7 @@ namespace MarBasGleaner.Commands
                     {
                         _logger.LogError(e, "Snapshot connect error");
                     }
+                    snapshotDir.Disconnect();
                     return ReportError(CmdResultCode.SnapshotInitError, $"Error connecting snapshot '{snapshotDir.FullPath}' with {Url}: {e.Message}");
                 }
 

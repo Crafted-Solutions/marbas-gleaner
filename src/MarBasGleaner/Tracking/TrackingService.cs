@@ -5,7 +5,7 @@ namespace MarBasGleaner.Tracking
 {
     internal sealed class TrackingService(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider) : ITrackingService
     {
-        private readonly IDictionary<string, SnapshotDirectory> _snapshots = new Dictionary<string, SnapshotDirectory>();
+        private readonly Dictionary<string, SnapshotDirectory> _snapshots = new();
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly IServiceProvider _services = serviceProvider;
 
@@ -27,7 +27,7 @@ namespace MarBasGleaner.Tracking
         {
             if (!_snapshots.TryGetValue(path, out var snapshot))
             {
-                snapshot = new SnapshotDirectory(path);
+                snapshot = new SnapshotDirectory(_services.GetRequiredService<ILogger<SnapshotDirectory>>(), path);
                 if (snapshot.IsDirectory)
                 {
                     await snapshot.LoadMetadata(cancellationToken);

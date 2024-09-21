@@ -114,15 +114,19 @@ namespace MarBasGleaner.Commands
             }
         }
 
-        protected static int CheckSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true)
+        protected static int CheckSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true, bool requiresCheckpoint = true)
         {
-            if (!snapshotDir.IsDirectory || !snapshotDir.IsSnapshot)
+            if (!snapshotDir.IsReady)
             {
                 return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' contains no tracking snapshots");
             }
             if (mustBeConnected && !snapshotDir.IsConnected)
             {
                 return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' is not connected to broker, execute 'connect' first");
+            }
+            if (requiresCheckpoint && (null == snapshotDir.LocalCheckpoint || null == snapshotDir.SharedCheckpoint))
+            {
+                return ReportError(CmdResultCode.SnapshotStateError, $"Snapshot checkpoints are missing, delete {SnapshotDirectory.LocalStateFileName} and execute 'connect' command");
             }
             return 0;
         }
