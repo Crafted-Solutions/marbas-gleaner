@@ -6,7 +6,7 @@ using MarBasSchema.Broker;
 
 namespace MarBasGleaner.Commands
 {
-    internal class TrackCmd(): ConnectCmd("track", "Sets up tracking of MarBas grains in local directory")
+    internal sealed class TrackCmd(): ConnectCmd("track", "Sets up tracking of MarBas grains in local directory")
     {
         //public TrackCmd()
         //    : base("track", "Sets up tracking of MarBas grains in local directory")

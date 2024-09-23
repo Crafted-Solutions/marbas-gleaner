@@ -1,10 +1,5 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Text.Json;
-using DiffPlex;
-using DiffPlex.DiffBuilder;
-using DiffPlex.DiffBuilder.Model;
-using MarBasGleaner.Json;
 using MarBasGleaner.Tracking;
 using MarBasSchema.Grain;
 using MarBasSchema.Transport;
@@ -206,48 +201,13 @@ namespace MarBasGleaner.Commands
                             DisplayMessage($"Grain {brokerGrain.Id:D} stored to {path}");
                             break;
                         case 4:
-                            DisplayDiff(localGrain, brokerGrain);
+                            DiffCmd.DisplayDiff(localGrain, brokerGrain);
                             break;
                     }
 
                 } while (!choiceComplete);
 
                 return result;
-            }
-
-            private static void DisplayDiff(IGrainTransportable localGrain, IGrainTransportable brokerGrain)
-            {
-                var localText = JsonSerializer.Serialize(localGrain, JsonDefaults.SerializationOptions);
-                var brokerText = JsonSerializer.Serialize(brokerGrain, JsonDefaults.SerializationOptions);
-
-                var diffBuilder = new InlineDiffBuilder(new Differ());
-                var diff = diffBuilder.BuildDiffModel(localText, brokerText);
-
-                foreach (var line in diff.Lines)
-                {
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    if (line.Position.HasValue) Console.Write(line.Position.Value);
-                    Console.Write('\t');
-                    switch (line.Type)
-                    {
-                        case ChangeType.Inserted:
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.Write("+ ");
-                            break;
-                        case ChangeType.Deleted:
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Write("- ");
-                            break;
-                        default:
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                            Console.Write("  ");
-                            break;
-                    }
-
-                    Console.Write(line.Text);
-                    Console.Write(Environment.NewLine);
-                }
-                Console.ResetColor();
             }
 
             private static async Task ImportGrain(SnapshotDirectory snapshotDir, IGrainTransportable grain, GrainTrackingStatus status, SnapshotCheckpoint checkpoint, CancellationToken cancellationToken = default)

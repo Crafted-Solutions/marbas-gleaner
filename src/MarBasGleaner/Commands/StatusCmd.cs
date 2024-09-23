@@ -7,7 +7,7 @@ using MarBasSchema.Transport;
 namespace MarBasGleaner.Commands
 {
 
-    internal class StatusCmd : GenericCmd
+    internal sealed class StatusCmd : GenericCmd
     {
         public StatusCmd()
             : base("status", "Shows status of MarBas grains in a tracking snapshot")
