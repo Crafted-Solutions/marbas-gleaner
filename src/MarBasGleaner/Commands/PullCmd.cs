@@ -9,7 +9,7 @@ namespace MarBasGleaner.Commands
     internal class PullCmd: GenericCmd
     {
         public PullCmd()
-            : base("pull", "Pulls modified and new grains from MarBas broker into snapshot")
+            : base("pull", PullCmdL10n.CmdDesc)
         {
             Setup();
         }
@@ -18,8 +18,8 @@ namespace MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<bool>(new[] { "-o", "--overwrite" }, "Always overwrite grains in snapshot even newer ones"));
-            AddOption(new Option<bool>("--force-checkpoint", "Create new checkpoint even when it's safe using latest existing one"));
+            AddOption(new Option<bool>(new[] { "-o", "--overwrite" }, PullCmdL10n.OverwriteOptionDesc));
+            AddOption(new Option<bool>("--force-checkpoint", PullCmdL10n.ForceCheckpointOptionDesc));
         }
 
         public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
@@ -46,7 +46,7 @@ namespace MarBasGleaner.Commands
                     return (int)brokerStat.Code;
                 }
 
-                DisplayMessage($"Pulling grains from {client.APIUrl} into snapshot {snapshotDir.FullPath}", MessageSeparatorOption.After);
+                DisplayMessage(string.Format(PullCmdL10n.MsgCmdStart, client.APIUrl, snapshotDir.FullPath), MessageSeparatorOption.After);
 
                 var isSafeCheckpoint = snapshotDir.LocalCheckpoint!.IsSame(snapshotDir.SharedCheckpoint);
                 var targetCheckpoint = ForceCheckpoint || !isSafeCheckpoint
@@ -81,7 +81,7 @@ namespace MarBasGleaner.Commands
                     {
                         if (conflated.Deletions.Contains(brokerGrain.Id))
                         {
-                            DisplayMessage($"Skippin deleted grain {brokerGrain.Id:D}");
+                            DisplayMessage(string.Format(PullCmdL10n.StatusGrainDeleted, brokerGrain.Id));
                         }
                         else
                         {
@@ -136,7 +136,7 @@ namespace MarBasGleaner.Commands
 
                 if (0 == changes)
                 {
-                    DisplayInfo($"Snapshot {snapshotDir.FullPath} is already uptodate");
+                    DisplayInfo(string.Format(PullCmdL10n.MsgCmdSuccessNoop, snapshotDir.FullPath));
                 }
                 else
                 {
@@ -151,7 +151,7 @@ namespace MarBasGleaner.Commands
                     await snapshotDir.StoreCheckpoint(targetCheckpoint, true, ctoken);
                     await snapshotDir.StoreMetadata(false, ctoken);
 
-                    DisplayMessage($"Integrated {changes} changes into checkpont {targetCheckpoint.Ordinal} of snapshot {snapshotDir.FullPath}", MessageSeparatorOption.Before);
+                    DisplayMessage(string.Format(PullCmdL10n.MsgCmdSuccess, changes, targetCheckpoint.Ordinal, snapshotDir.FullPath), MessageSeparatorOption.Before);
                 }
 
                 return result;
@@ -170,20 +170,16 @@ namespace MarBasGleaner.Commands
                     return result;
                 }
                 
-                DisplayMessage($"Both versions of grain {brokerGrain.Id:D} ({brokerGrain.Path ?? " / "}) have been modified (snapshot timestamp: {localGrain.MTime:O}, broker timestamp: {brokerGrain.MTime:O})");
+                DisplayMessage(string.Format(PullCmdL10n.StatusGrainConflict, brokerGrain.Id, brokerGrain.Path ?? " / ", localGrain.MTime, brokerGrain.MTime));
                 bool choiceComplete;
                 do
                 {
-                    DisplayMessage("Please decide how to procede");
-                    DisplayMessage("   1. Keep snapshot version as current");
-                    DisplayMessage("   2. Overwrite snapshot grain with the broker version");
-                    DisplayMessage("   3. Save broker version into a temporary file and resolve conflict manually");
-                    DisplayMessage("   4. Display differences and decide again");
+                    DisplayMessage(string.Format(PullCmdL10n.ChoiceGrainConflict, Environment.NewLine));
 
                     int choice;
                     while (!Int32.TryParse(Console.ReadLine(), out choice) || 1 > choice || 4 < choice)
                     {
-                        DisplayMessage("Please choose an option 1-4");
+                        DisplayMessage(PullCmdL10n.MsgChooseOf4);
                     }
                     choiceComplete = 4 != choice;
                     
@@ -198,7 +194,7 @@ namespace MarBasGleaner.Commands
                             break;
                         case 3:
                             var path = await snapshotDir.StoreGrain(brokerGrain, false, true, cancellationToken);
-                            DisplayMessage($"Grain {brokerGrain.Id:D} stored to {path}");
+                            DisplayMessage(string.Format(PullCmdL10n.StatusGrainStored, brokerGrain.Id, path));
                             break;
                         case 4:
                             DiffCmd.DisplayDiff(localGrain, brokerGrain);
@@ -212,14 +208,14 @@ namespace MarBasGleaner.Commands
 
             private static async Task ImportGrain(SnapshotDirectory snapshotDir, IGrainTransportable grain, GrainTrackingStatus status, SnapshotCheckpoint checkpoint, CancellationToken cancellationToken = default)
             {
-                DisplayMessage($"{(GrainTrackingStatus.New == status ? "Pulling missing " : "Updating ")}grain {grain.Id:D} ({grain.Path ?? " / "})");
+                DisplayMessage(string.Format(GrainTrackingStatus.New == status ? PullCmdL10n.StatusGrainPull : PullCmdL10n.StatusGrainUpdate, grain.Id, grain.Path ?? " / "));
                 await snapshotDir.StoreGrain(grain, false, cancellationToken: cancellationToken);
                 UpdateCheckpoint(checkpoint, grain, status);
             }
 
             private static void PurgeGrain(SnapshotDirectory snapshotDir, IGrain grain, SnapshotCheckpoint checkpoint)
             {
-                DisplayMessage($"Purging deleted grain {grain.Id:D} ({grain.Path ?? " / "})");
+                DisplayMessage(string.Format(PullCmdL10n.StatusGrainPurge, grain.Id, grain.Path ?? " / "));
                 snapshotDir.DeleteGrains(new[] { grain });
                 UpdateCheckpoint(checkpoint, grain, GrainTrackingStatus.Deleted);
             }

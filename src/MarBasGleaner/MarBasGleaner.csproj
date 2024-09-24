@@ -34,4 +34,73 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Commands\ConnectCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ConnectCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\DiffCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DiffCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\GenericCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>GenericCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\PullCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PullCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\StatusCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>StatusCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\TrackCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TrackCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="CommonL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CommonL10n.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Commands\ConnectCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ConnectCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\DiffCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>DiffCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\GenericCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>GenericCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\PullCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PullCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\StatusCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>StatusCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\TrackCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>TrackCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="CommonL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommonL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

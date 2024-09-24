@@ -32,7 +32,7 @@ namespace MarBasGleaner
 
         private static CommandLineBuilder GetCommandLineBuilder()
         {
-            var rootCmd = new RootCommand("MarBas Gleaner (Grain Leaner). Gleans and synchronizes changes on MarBas grains");
+            var rootCmd = new RootCommand(CommonL10n.ProgramDesc);
             rootCmd.AddCommand(new TrackCmd());
             rootCmd.AddCommand(new ConnectCmd());
             rootCmd.AddCommand(new StatusCmd());

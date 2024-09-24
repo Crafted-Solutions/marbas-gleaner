@@ -10,7 +10,7 @@ namespace MarBasGleaner.Commands
     internal sealed class StatusCmd : GenericCmd
     {
         public StatusCmd()
-            : base("status", "Shows status of MarBas grains in a tracking snapshot")
+            : base("status", StatusCmdL10n.CmdDesc)
         {
             Setup();
         }
@@ -18,7 +18,7 @@ namespace MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<bool>("--show-all", "List all grains, even unmodified ones"));
+            AddOption(new Option<bool>("--show-all", StatusCmdL10n.ShowAllOptionDesc));
         }
 
         public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
@@ -45,12 +45,12 @@ namespace MarBasGleaner.Commands
                     return (int)brokerStat.Code;
                 }
 
-                DisplayMessage($"Comparing snapshot {snapshotDir.FullPath} with {client.APIUrl}", MessageSeparatorOption.After);
+                DisplayMessage(string.Format(StatusCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
 
                 bool isCheckpointInSync = snapshotDir.LocalCheckpoint!.IsSame(snapshotDir.SharedCheckpoint);
                 if (!isCheckpointInSync)
                 {
-                    DisplayWarning("Snapshot has been modified externally, results may be inaccurate");
+                    DisplayWarning(StatusCmdL10n.WarnSnapshotModified);
                 }
 
                 var rootId = (Guid)(snapshotDir.Snapshot?.AnchorId!);
@@ -137,11 +137,11 @@ namespace MarBasGleaner.Commands
                 }
                 if (0 == result)
                 {
-                    DisplayInfo($"Snapshot {snapshotDir.FullPath} is uptodate");
+                    DisplayInfo(string.Format(StatusCmdL10n.MsgCmdSuccessNoop, snapshotDir.FullPath));
                 }
                 else
                 {
-                    DisplayMessage("Status legend (left side - snapshot, right side - broker):", MessageSeparatorOption.Before);
+                    DisplayMessage(StatusCmdL10n.MsgCmdSuccessLegend, MessageSeparatorOption.Before);
                     var legend = string.Empty;
                     for (var s = GrainTrackingStatus.Missing; s <= GrainTrackingStatus.Deleted; s++)
                     {

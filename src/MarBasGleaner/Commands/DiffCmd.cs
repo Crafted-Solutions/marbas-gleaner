@@ -22,7 +22,7 @@ namespace MarBasGleaner.Commands
         }
 
         public DiffCmd():
-            base("diff", "Shows differences between grains in snapshot and MarBas broker")
+            base("diff", DiffCmdL10n.CmdDesc)
         {
             Setup();
         }
@@ -35,7 +35,7 @@ namespace MarBasGleaner.Commands
                 Arity = new ArgumentArity(1, 2)
             });
             base.Setup();
-            AddOption(new Option<CompareMode>(new[] { "-m", "--mode" }, () => CompareMode.Auto, $"Comparison mode applied to grains identified by <grain-ids> argument, {Enum.GetName(CompareMode.Snapshot2Broker)} is default for single ID, {Enum.GetName(CompareMode.Snapshot)} - for 2 distinct IDs"));
+            AddOption(new Option<CompareMode>(new[] { "--mode", "-m" }, () => CompareMode.Auto, $"Comparison mode applied to grains identified by <grain-ids> argument, {Enum.GetName(CompareMode.Snapshot2Broker)} is default for single ID, {Enum.GetName(CompareMode.Snapshot)} - for 2 distinct IDs"));
         }
 
         internal static void DisplayDiff(IGrainTransportable source, IGrainTransportable target)
