@@ -6,31 +6,26 @@ using MarBasSchema.Broker;
 
 namespace MarBasGleaner.Commands
 {
-    internal class TrackCmd(): ConnectCmd("track", "Sets up tracking of MarBas grains in local directory")
+    internal sealed class TrackCmd(): ConnectCmd("track", TrackCmdL10n.CmdDesc)
     {
-        //public TrackCmd()
-        //    : base("track", "Sets up tracking of MarBas grains in local directory")
-        //{
-        //}
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
             base.Setup();
-            AddArgument(new Argument<string>("path-or-id", "Identifier of the top grain to track"));
-            AddOption(new Option<SnapshotScope>(new [] { "--scope", "-s" }, () => SnapshotScope.Recursive, "Tracking scope"));
-            AddOption(new Option<SourceControlFlavor>(new [] { "--scs", "-c" }, () => SourceControlFlavor.Git, "Source control system used for snapshots"));
-            AddOption(new Option<Guid>("--ignore-grains", "List of grain IDs to ignore")
+            AddArgument(new Argument<string>("path-or-id", TrackCmdL10n.IdArgDesc));
+            AddOption(new Option<SnapshotScope>(new [] { "--scope", "-s" }, () => SnapshotScope.Recursive, TrackCmdL10n.ScopeOptionDesc));
+            AddOption(new Option<SourceControlFlavor>(new [] { "--scs", "-c" }, () => SourceControlFlavor.Git, string.Format(TrackCmdL10n.ScsOptionDesc, Enum.GetName(SourceControlFlavor.Git))));
+            AddOption(new Option<Guid>("--ignore-grains", TrackCmdL10n.IgnoreGrainsOptionDesc)
             {
                 Arity = ArgumentArity.OneOrMore,
                 AllowMultipleArgumentsPerToken = true
             });
-            AddOption(new Option<Guid>("--ignore-types", "List of type IDs of grains to ignore")
+            AddOption(new Option<Guid>("--ignore-types", TrackCmdL10n.IgnoreTypesOptionDesc)
             {
                 Arity = ArgumentArity.OneOrMore,
                 AllowMultipleArgumentsPerToken = true
             });
-            AddOption(new Option<string>("--ignore-type-names", "List of type names of grains to ignore")
+            AddOption(new Option<string>("--ignore-type-names", TrackCmdL10n.IgnoreTypeNamesOptionDesc)
             {
                 Arity = ArgumentArity.OneOrMore,
                 AllowMultipleArgumentsPerToken = true
@@ -50,14 +45,14 @@ namespace MarBasGleaner.Commands
             {
                 if (null == Url || !Url.IsAbsoluteUri)
                 {
-                    return ReportError(CmdResultCode.ParameterError, $"'{Url}' is not a recognizable absolute URI");
+                    return ReportError(CmdResultCode.ParameterError, string.Format(TrackCmdL10n.ErrorURL, Url));
                 }
                 var ctoken = context.GetCancellationToken();
 
                 var anchorId = Guid.Empty;
                 if (!PathOrId!.StartsWith($"/{SchemaDefaults.RootName}") && !Guid.TryParse(PathOrId, out anchorId))
                 {
-                    return ReportError(CmdResultCode.ParameterError, $"'{PathOrId}' is not a valid grain path nor a UID");
+                    return ReportError(CmdResultCode.ParameterError, string.Format(TrackCmdL10n.ErrorIdOrPath, PathOrId));
                 }
                 if ($"/{SchemaDefaults.RootName}" == PathOrId)
                 {
@@ -67,15 +62,11 @@ namespace MarBasGleaner.Commands
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken: ctoken);
                 if (snapshotDir.IsSnapshot)
                 {
-                    var errMsg = $"'{snapshotDir.FullPath}' already contains a tracking snapshot";
-                    if (!snapshotDir.IsConnected)
-                    {
-                        errMsg += " which is unconnected, execute 'connect' command";
-                    }
-                    return ReportError(CmdResultCode.SnapshotStateError, errMsg);
+                    return ReportError(CmdResultCode.SnapshotStateError,
+                        string.Format(snapshotDir.IsConnected ? TrackCmdL10n.ErrorSnapshotState : TrackCmdL10n.ErrorSnapshotExists, snapshotDir.FullPath));
                 }
 
-                DisplayMessage($"Setting up tracking of {Url} in {snapshotDir.FullPath}", MessageSeparatorOption.After);
+                DisplayMessage(string.Format(TrackCmdL10n.MsgCmdStart, Url, snapshotDir.FullPath), MessageSeparatorOption.After);
 
                 var snapshot = new Snapshot()
                 {
@@ -97,7 +88,7 @@ namespace MarBasGleaner.Commands
                 var anchor = anchorId.Equals(Guid.Empty) ? await client.GetGrain(PathOrId.Remove(0, $"/{SchemaDefaults.RootName}/".Length), ctoken) : await client.GetGrain(anchorId, ctoken);
                 if (null == anchor)
                 {
-                    return ReportError(CmdResultCode.AnchorGrainError, $"Anchor grain '{PathOrId}' could not be loaded");
+                    return ReportError(CmdResultCode.AnchorGrainError, string.Format(TrackCmdL10n.ErrorAnchorLoad, PathOrId));
                 }
                 var latest = anchor.MTime;
 
@@ -117,7 +108,7 @@ namespace MarBasGleaner.Commands
                         _logger.LogError(e, "Initialization error");
                     }
                     snapshotDir.CleanUp();
-                    return ReportError(CmdResultCode.SnapshotInitError, $"Error initializing snapshot directory '{snapshotDir.FullPath}': {e.Message}");
+                    return ReportError(CmdResultCode.SnapshotInitError, string.Format(TrackCmdL10n.ErrorInitializationException, snapshotDir.FullPath, e.Message));
                 }
 
                 if (BuildIgnoreFilter(snapshotDir))
@@ -129,16 +120,16 @@ namespace MarBasGleaner.Commands
                 {
                     if (snapshotDir.IsIgnoredGrain(anchor))
                     {
-                        DisplayWarning($"Anchor grain {anchor.Id} is in the ignore list");
+                        DisplayWarning(string.Format(TrackCmdL10n.WarnAnchorIgnored, anchor.Id));
                     }
                     else
                     {
                         var anchorImp = (await client.ImportGrains(new[] { anchor.Id }, ctoken)).FirstOrDefault();
                         if (null == anchorImp)
                         {
-                            return ReportError(CmdResultCode.AnchorGrainError, $"Anchor grain {anchor.Id} doesn't seem to be exportable");
+                            return ReportError(CmdResultCode.AnchorGrainError, string.Format(TrackCmdL10n.ErrorAnchorImport));
                         }
-                        DisplayMessage($"Pulling grain {anchorImp.Id:D} ({anchorImp.Path ?? "/"})");
+                        DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, anchorImp.Id, anchorImp.Path ?? "/"));
                         await snapshotDir.StoreGrain(anchorImp, cancellationToken: ctoken);
                     }
                 }
@@ -166,7 +157,7 @@ namespace MarBasGleaner.Commands
                 var grainsImported = await client.ImportGrains(filteredIds, ctoken);
                 await Parallel.ForEachAsync(grainsImported, ctoken, async (grain, token) =>
                 {
-                    DisplayMessage($"Pulling grain {grain.Id:D} ({grain.Path ?? "/"})");
+                    DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, grain.Id, grain.Path ?? "/"));
                     await snapshotDir.StoreGrain(grain, cancellationToken: token);
                 });
 
@@ -174,7 +165,7 @@ namespace MarBasGleaner.Commands
                 snapshot.Updated = DateTime.UtcNow;
                 await snapshotDir.StoreMetadata(cancellationToken: ctoken);
 
-                DisplayInfo($"Snapshot of {Url} created successfully");
+                DisplayInfo(string.Format(TrackCmdL10n.MsgCmdSuccess, Url));
                 return 0;
             }
 

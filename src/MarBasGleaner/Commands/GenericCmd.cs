@@ -9,7 +9,7 @@ namespace MarBasGleaner.Commands
     internal abstract class GenericCmd : Command
     {
         public static readonly string SeparatorLine = new('-', 50);
-        public static readonly Option<string> DirectoryOpion = new(new[] { "--directory", "-d" }, () => SnapshotDirectory.DefaultPath, "Local directory containing tracking information");
+        public static readonly Option<string> DirectoryOpion = new(new[] { "--directory", "-d" }, () => SnapshotDirectory.DefaultPath, GenericCmdL10n.DirectoryOpionDesc);
 
         [Flags]
         public enum MessageSeparatorOption
@@ -116,17 +116,17 @@ namespace MarBasGleaner.Commands
 
         protected static int CheckSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true, bool requiresCheckpoint = true)
         {
-            if (!snapshotDir.IsReady)
+            if (!snapshotDir.IsSnapshot || !snapshotDir.IsReady)
             {
-                return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' contains no tracking snapshots");
+                return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorReadyState, snapshotDir.FullPath));
             }
             if (mustBeConnected && !snapshotDir.IsConnected)
             {
-                return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' is not connected to broker, execute 'connect' first");
+                return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorConnectedState, snapshotDir.FullPath));
             }
             if (requiresCheckpoint && (null == snapshotDir.LocalCheckpoint || null == snapshotDir.SharedCheckpoint))
             {
-                return ReportError(CmdResultCode.SnapshotStateError, $"Snapshot checkpoints are missing, delete {SnapshotDirectory.LocalStateFileName} and execute 'connect' command");
+                return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorCheckpointMissing, SnapshotDirectory.LocalStateFileName));
             }
             return 0;
         }
@@ -140,13 +140,11 @@ namespace MarBasGleaner.Commands
             };
             if (null == result.Info)
             {
-                result.Code = CmdResultCode.BrokerConnectionError;
-                ReportError(result.Code, $"Failed querying broker API at '{client.APIUrl}'");
+                ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnection, client.APIUrl));
             }
             else if (null != snapshotVersion && result.Info.SchemaVersion != snapshotVersion)
             {
-                result.Code = CmdResultCode.SchemaVersionError;
-                ReportError(result.Code, $"Broker schema version {result.Info.SchemaVersion} is incompatible with snapshot {snapshotVersion}");
+                ReportError(result.Code = CmdResultCode.SchemaVersionError, string.Format(GenericCmdL10n.ErrorSchemaVersion, result.Info.SchemaVersion, snapshotVersion));
             }
             return result;
         }

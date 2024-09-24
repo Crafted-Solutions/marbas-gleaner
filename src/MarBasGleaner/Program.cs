@@ -23,6 +23,7 @@ namespace MarBasGleaner
                 .UseCommandHandler<TrackCmd, TrackCmd.Worker>()
                 .UseCommandHandler<ConnectCmd, ConnectCmd.Worker>()
                 .UseCommandHandler<StatusCmd, StatusCmd.Worker>()
+                .UseCommandHandler<DiffCmd, DiffCmd.Worker>()
                 .UseCommandHandler<PullCmd, PullCmd.Worker>();
             }).UseDefaults().Build();
 
@@ -31,10 +32,11 @@ namespace MarBasGleaner
 
         private static CommandLineBuilder GetCommandLineBuilder()
         {
-            var rootCmd = new RootCommand("Gleans and synchronizes changes on MarBas grains");
+            var rootCmd = new RootCommand(CommonL10n.ProgramDesc);
             rootCmd.AddCommand(new TrackCmd());
             rootCmd.AddCommand(new ConnectCmd());
             rootCmd.AddCommand(new StatusCmd());
+            rootCmd.AddCommand(new DiffCmd());
             rootCmd.AddCommand(new PullCmd());
             return new CommandLineBuilder(rootCmd);
         }

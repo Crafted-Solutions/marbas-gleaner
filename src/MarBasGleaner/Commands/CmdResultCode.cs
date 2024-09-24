@@ -9,6 +9,7 @@
         SchemaVersionError = 2,
         AnchorGrainError = 3,
         SnapshotInitError = 4,
+        GrainLoadError = 5,
         SnapshotStatusOutofdate = 42
     }
 }

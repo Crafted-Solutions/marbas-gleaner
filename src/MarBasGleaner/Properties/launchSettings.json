@@ -39,6 +39,14 @@
         "DOTNET_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true
+    },
+    "mbglean-diff": {
+      "commandName": "Project",
+      "commandLineArgs": "diff 00000000-0000-1000-a000-000000000001 -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json"
