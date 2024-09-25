@@ -120,4 +120,25 @@
   <data name="CmdDesc" xml:space="preserve">
     <value>Shows differences between grains in snapshot and MarBas broker</value>
   </data>
+  <data name="ErrorGrainLoad" xml:space="preserve">
+    <value>Failed to load grain {0:D} from {1}</value>
+  </data>
+  <data name="ErrorMissingGrainID" xml:space="preserve">
+    <value>Missing second grain ID for comparison mode {0}</value>
+  </data>
+  <data name="IdArgDesc" xml:space="preserve">
+    <value>ID of the grain to use as comparison base, single argument version compares snapshot with broker, 2 different IDs indicate snapshot version of both by defaulft (s. --mode option)</value>
+  </data>
+  <data name="ModeArgDesc" xml:space="preserve">
+    <value>Comparison mode applied to grains identified by &lt;grain-ids&gt; argument, {0} is automatic mode for single ID, {1} - for 2 distinct IDs</value>
+  </data>
+  <data name="MsgCmdStart" xml:space="preserve">
+    <value>Comparing grain {0:D} ({1}) to {2:D} ({3})</value>
+  </data>
+  <data name="MsgCmdStartSameID" xml:space="preserve">
+    <value>Comparing grain {0:D} ({1}) to itself ({3})</value>
+  </data>
+  <data name="MsgCmdSuccessNoop" xml:space="preserve">
+    <value>Grains are identical</value>
+  </data>
 </root>
