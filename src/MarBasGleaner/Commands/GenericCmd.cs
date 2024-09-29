@@ -52,6 +52,40 @@ namespace MarBasGleaner.Commands
             }
 
             public abstract Task<int> InvokeAsync(InvocationContext context);
+
+            protected async Task<ConnectionCheckResult> ValidateBrokerConnection(IBrokerClient client, Version? snapshotVersion = null, CancellationToken cancellationToken = default)
+            {
+                var result = new ConnectionCheckResult
+                {
+                    Code = CmdResultCode.Success
+                };
+
+                try
+                {
+                    result.Info = await client.GetSystemInfo(cancellationToken);
+                    if (null == result.Info)
+                    {
+                        ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnection, client.APIUrl));
+                    }
+                    else if (result.Info.Version < ConnectionSettings.MinimumAPIVersion)
+                    {
+                        ReportError(result.Code = CmdResultCode.APIVersionError, string.Format(GenericCmdL10n.ErrorAPIVersion, ConnectionSettings.MinimumAPIVersion, result.Info.Version));
+                    }
+                    else if (null != snapshotVersion && result.Info.SchemaVersion != snapshotVersion)
+                    {
+                        ReportError(result.Code = CmdResultCode.SchemaVersionError, string.Format(GenericCmdL10n.ErrorSchemaVersion, result.Info.SchemaVersion, snapshotVersion));
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (_logger.IsEnabled(LogLevel.Error))
+                    {
+                        _logger.LogError(e, "Broker connection error");
+                    }
+                    ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnectionException, client.APIUrl, e.Message));
+                }
+                return result;
+            }
         }
 
         internal static int ReportError(CmdResultCode error, string message)
@@ -114,42 +148,28 @@ namespace MarBasGleaner.Commands
             }
         }
 
-        protected static int CheckSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true, bool requiresCheckpoint = true)
+        protected static int ValidateSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true, bool requiresCheckpoint = true)
         {
             if (!snapshotDir.IsSnapshot || !snapshotDir.IsReady)
             {
                 return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorReadyState, snapshotDir.FullPath));
             }
+            if (null != snapshotDir.Snapshot && snapshotDir.Snapshot.Version != Snapshot.SupportedVersion)
+            {
+                return ReportError(CmdResultCode.SnapshotVersionError, string.Format(GenericCmdL10n.ErrorSnapshotVersion, snapshotDir.FullPath, snapshotDir.Snapshot.Version, Snapshot.SupportedVersion));
+            }
             if (mustBeConnected && !snapshotDir.IsConnected)
             {
                 return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorConnectedState, snapshotDir.FullPath));
             }
-            if (requiresCheckpoint && (null == snapshotDir.LocalCheckpoint || null == snapshotDir.SharedCheckpoint))
+            if (requiresCheckpoint && ((mustBeConnected && null == snapshotDir.LocalCheckpoint) || null == snapshotDir.SharedCheckpoint))
             {
                 return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorCheckpointMissing, SnapshotDirectory.LocalStateFileName));
             }
             return 0;
         }
 
-        protected static async Task<ConnectionCheckResult> CheckBrokerConnection(IBrokerClient client, Version? snapshotVersion = null, CancellationToken cancellationToken = default)
-        {
-            var result = new ConnectionCheckResult
-            {
-                Code = CmdResultCode.Success,
-                Info = await client.GetSystemInfo(cancellationToken)
-            };
-            if (null == result.Info)
-            {
-                ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnection, client.APIUrl));
-            }
-            else if (null != snapshotVersion && result.Info.SchemaVersion != snapshotVersion)
-            {
-                ReportError(result.Code = CmdResultCode.SchemaVersionError, string.Format(GenericCmdL10n.ErrorSchemaVersion, result.Info.SchemaVersion, snapshotVersion));
-            }
-            return result;
-        }
-
-        protected struct ConnectionCheckResult
+        internal struct ConnectionCheckResult
         {
             public CmdResultCode Code;
             public IServerInfo? Info;

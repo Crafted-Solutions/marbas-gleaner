@@ -4,6 +4,7 @@ using MarBasSchema;
 using MarBasSchema.Transport;
 using MarBasSchema.IO;
 using MarBasCommon.Json;
+using MarBasSchema.Broker;
 
 namespace MarBasGleaner.Json
 {
@@ -44,6 +45,7 @@ namespace MarBasGleaner.Json
                     result.Converters.Add(new InterfaceJsonConverter<IAclEntryTransportable, AclEntryTransportable>());
                     result.Converters.Add(new InterfaceJsonConverter<IGrainLocalizedLayer, GrainLocalizedLayer>());
                     result.Converters.Add(new InterfaceJsonConverter<IStreamableContent, StreamableContent>());
+                    result.Converters.Add(new InterfaceJsonConverter<IBrokerOperationFeedback, BrokerOperationFeedback>());
                     options = Interlocked.CompareExchange(ref _deserializationOptions, result, null) ?? result;
                 }
                 return options;

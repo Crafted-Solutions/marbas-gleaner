@@ -22,14 +22,14 @@ namespace MarBasGleaner.Commands {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class GenericCmdL10n {
+    internal class PushCmdL10n {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal GenericCmdL10n() {
+        internal PushCmdL10n() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace MarBasGleaner.Commands {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarBasGleaner.Commands.GenericCmdL10n", typeof(GenericCmdL10n).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarBasGleaner.Commands.PushCmdL10n", typeof(PushCmdL10n).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,83 +61,83 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Local directory containing tracking information.
+        ///   Looks up a localized string similar to Pushes most recent grains from snapshot into MarBas broker.
         /// </summary>
-        internal static string DirectoryOpionDesc {
+        internal static string CmdDesc {
             get {
-                return ResourceManager.GetString("DirectoryOpionDesc", resourceCulture);
+                return ResourceManager.GetString("CmdDesc", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This tool requires API version {0}, while data broker reports {1}.
+        ///   Looks up a localized string similar to Broker {0} refused to perform push request.
         /// </summary>
-        internal static string ErrorAPIVersion {
+        internal static string ErrorBrokerRequest {
             get {
-                return ResourceManager.GetString("ErrorAPIVersion", resourceCulture);
+                return ResourceManager.GetString("ErrorBrokerRequest", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed querying broker API at &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Error attempting to store {0} / delete {1} grains in {2}: {3}.
         /// </summary>
-        internal static string ErrorBrokerConnection {
+        internal static string ErrorBrokerRequestException {
             get {
-                return ResourceManager.GetString("ErrorBrokerConnection", resourceCulture);
+                return ResourceManager.GetString("ErrorBrokerRequestException", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connection to broker at {0} failed due to error: {1}.
+        ///   Looks up a localized string similar to Pushing grains from snapshot {0} to {1}.
         /// </summary>
-        internal static string ErrorBrokerConnectionException {
+        internal static string MsgCmdStart {
             get {
-                return ResourceManager.GetString("ErrorBrokerConnectionException", resourceCulture);
+                return ResourceManager.GetString("MsgCmdStart", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Snapshot checkpoints are missing, delete {0} and execute &apos;connect&apos; command.
+        ///   Looks up a localized string similar to Successfully stored {0} / deleted {1} grains in {2}.
         /// </summary>
-        internal static string ErrorCheckpointMissing {
+        internal static string MsgCmdSuccess {
             get {
-                return ResourceManager.GetString("ErrorCheckpointMissing", resourceCulture);
+                return ResourceManager.GetString("MsgCmdSuccess", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is not connected to broker, execute &apos;connect&apos; first.
+        ///   Looks up a localized string similar to Latest checkpoint {0} has already been pushed.
         /// </summary>
-        internal static string ErrorConnectedState {
+        internal static string MsgCmdSuccessNoop {
             get {
-                return ResourceManager.GetString("ErrorConnectedState", resourceCulture);
+                return ResourceManager.GetString("MsgCmdSuccessNoop", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; contains no tracking snapshots.
+        ///   Looks up a localized string similar to Grains queued for deletion:{0}{1}.
         /// </summary>
-        internal static string ErrorReadyState {
+        internal static string StatusQueueDelete {
             get {
-                return ResourceManager.GetString("ErrorReadyState", resourceCulture);
+                return ResourceManager.GetString("StatusQueueDelete", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Broker schema version {0} is incompatible with snapshot {1}.
+        ///   Looks up a localized string similar to Grains queued for submission:{0}{1}.
         /// </summary>
-        internal static string ErrorSchemaVersion {
+        internal static string StatusQueueStore {
             get {
-                return ResourceManager.GetString("ErrorSchemaVersion", resourceCulture);
+                return ResourceManager.GetString("StatusQueueStore", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version of snapshot {0} is not supported (actual: {1}, expected {2}).
+        ///   Looks up a localized string similar to Grain {0:D} not found in snapshot, correcting checkpoint {1}.
         /// </summary>
-        internal static string ErrorSnapshotVersion {
+        internal static string WarnGrainNotFound {
             get {
-                return ResourceManager.GetString("ErrorSnapshotVersion", resourceCulture);
+                return ResourceManager.GetString("WarnGrainNotFound", resourceCulture);
             }
         }
     }

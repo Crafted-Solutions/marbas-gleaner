@@ -13,10 +13,12 @@
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
       <Optimize>False</Optimize>
       <NoWarn>1591;1701;1702</NoWarn>
+      <EnvironmentName>Development</EnvironmentName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
       <Optimize>True</Optimize>
       <NoWarn>1591;1701;1702</NoWarn>
+      <EnvironmentName>Production</EnvironmentName>
     </PropertyGroup>
 
   <ItemGroup>
@@ -56,6 +58,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PullCmdL10n.resx</DependentUpon>
     </Compile>
+    <Compile Update="Commands\PushCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PushCmdL10n.resx</DependentUpon>
+    </Compile>
     <Compile Update="Commands\StatusCmdL10n.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -89,6 +96,10 @@
     <EmbeddedResource Update="Commands\PullCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>PullCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\PushCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PushCmdL10n.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Commands\StatusCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -93,7 +93,7 @@ namespace MarBasGleaner.Commands
                 var ctoken = context.GetCancellationToken();
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
 
-                var result = CheckSnapshot(snapshotDir);
+                var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
                 {
                     return result;
@@ -127,7 +127,7 @@ namespace MarBasGleaner.Commands
                     }
 
                     using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
-                    var brokerStat = await CheckBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
+                    var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
                     if (CmdResultCode.Success != brokerStat.Code)
                     {
                         return (int)brokerStat.Code;

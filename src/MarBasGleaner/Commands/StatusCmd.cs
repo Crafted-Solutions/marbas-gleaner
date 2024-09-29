@@ -31,7 +31,7 @@ namespace MarBasGleaner.Commands
                 var ctoken = context.GetCancellationToken();
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
 
-                var result = CheckSnapshot(snapshotDir);
+                var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
                 {
                     return result;
@@ -39,7 +39,7 @@ namespace MarBasGleaner.Commands
 
                 using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
 
-                var brokerStat = await CheckBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
+                var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
@@ -59,44 +59,63 @@ namespace MarBasGleaner.Commands
                     mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: ctoken);
                 var brokerModHash = new Dictionary<Guid, IGrain>(brokerMods.Select(x => new KeyValuePair<Guid, IGrain>(x.Id, x)));
 
-                var conflated = await snapshotDir.LoadConflatedCheckpoint(ctoken);
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: ctoken);
+                var additionsToCheck = new Dictionary<Guid, IGrain>();
 
                 await foreach (var grain in snapshotDir.ListGrains<GrainTransportable>(cancellationToken: ctoken))
                 {
                     if (null != grain)
                     {
-                        var status = new[] { GrainTrackingStatus.Uptodate, GrainTrackingStatus.Uptodate };
+                        var status = (GrainTrackingStatus.Uptodate, GrainTrackingStatus.Uptodate);
                         if (brokerModHash.TryGetValue(grain.Id, out IGrain? value))
                         {
-                            status[1] = GrainTrackingStatus.Modified;
+                            status.Item2 = GrainTrackingStatus.Modified;
                             if (value.MTime < grain.MTime)
                             {
-                                status[0] = GrainTrackingStatus.Modified;
+                                status.Item1 = GrainTrackingStatus.Modified;
                             }
                             brokerModHash.Remove(grain.Id);
                         }
 
-                        if (!conflated.Additions.Contains(grain.Id))
+                        var pending = false;
+                        if (!conflated.Modifications.Contains(grain.Id))
                         {
-                            status[0] = snapshotDir.SharedCheckpoint!.Additions.Contains(grain.Id) ? GrainTrackingStatus.New : GrainTrackingStatus.Obscure;
+                            status.Item1 = snapshotDir.SharedCheckpoint!.Modifications.Contains(grain.Id) ? GrainTrackingStatus.New : GrainTrackingStatus.Obscure;
                         }
                         else if (conflated.Deletions.Contains(grain.Id))
                         {
-                            status[0] = GrainTrackingStatus.Obscure;
+                            status.Item1 = GrainTrackingStatus.Obscure;
                         }
-                        else if (grain.MTime > snapshotDir.LocalCheckpoint.Latest)
+                        else if (GrainTrackingStatus.Uptodate == status.Item1 && GrainTrackingStatus.Uptodate == status.Item2 && grain.MTime > snapshotDir.LocalCheckpoint.Latest)
                         {
-                            status[0] = GrainTrackingStatus.Modified;
+                            status.Item1 = GrainTrackingStatus.Modified;
+                            if (!isCheckpointInSync && !snapshotDir.LocalCheckpoint.Modifications.Contains(grain.Id))
+                            {
+                                additionsToCheck[grain.Id] = grain;
+                                pending = true;
+                            }
                         }
 
-                        if (0 == result && GrainTrackingStatus.Uptodate < (status[0] | status[1]))
+                        if (0 == result && GrainTrackingStatus.Uptodate < (status.Item1 | status.Item2))
                         {
                             result = (int)CmdResultCode.SnapshotStatusOutofdate;
                         }
-                        PrintGrainInfo(grain, status[0], status[1]);
+                        if (!pending)
+                        {
+                            PrintGrainInfo(grain, status.Item1, status.Item2);
+                        }
 
-                        conflated.Additions.Remove(grain.Id);
+                        conflated.Modifications.Remove(grain.Id);
                         conflated.Deletions.Remove(grain.Id);
+                    }
+                }
+
+                if (0 < additionsToCheck.Count)
+                {
+                    var checkResults = await client.CheckGrainsExist(additionsToCheck.Keys, ctoken);
+                    foreach (var checkResult in checkResults)
+                    {
+                        PrintGrainInfo(additionsToCheck[checkResult.Key], checkResult.Value ? GrainTrackingStatus.Modified : GrainTrackingStatus.New);
                     }
                 }
 
@@ -110,9 +129,9 @@ namespace MarBasGleaner.Commands
                     };
                 };
 
-                foreach (var id in conflated.Additions)
+                foreach (var id in conflated.Modifications)
                 {
-                    var grain = await client.GetGrain(id, ctoken);
+                    var grain = await client.GetGrain(id, false, ctoken);
                     if (null == grain)
                     {
                         PrintGrainInfo(DeletedGrain(id), statusBroker: GrainTrackingStatus.Deleted);
@@ -124,7 +143,7 @@ namespace MarBasGleaner.Commands
                 }
                 foreach (var id in conflated.Deletions)
                 {
-                    var grain = await client.GetGrain(id, ctoken);
+                    var grain = await client.GetGrain(id, false, ctoken);
                     if (null != grain)
                     {
                         PrintGrainInfo(grain, GrainTrackingStatus.Deleted);

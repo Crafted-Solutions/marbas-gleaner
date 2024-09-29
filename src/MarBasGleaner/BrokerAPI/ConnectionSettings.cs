@@ -6,6 +6,8 @@ namespace MarBasGleaner.BrokerAPI
 {
     internal class ConnectionSettings
     {
+        public static readonly Version MinimumAPIVersion = new(0, 1, 15);
+
         public required Uri BrokerUrl { get; set; }
         public string Authenticator
         {

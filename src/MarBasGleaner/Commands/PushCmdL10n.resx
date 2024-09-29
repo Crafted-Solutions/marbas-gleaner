@@ -117,31 +117,31 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DirectoryOpionDesc" xml:space="preserve">
-    <value>Local directory containing tracking information</value>
+  <data name="CmdDesc" xml:space="preserve">
+    <value>Pushes most recent grains from snapshot into MarBas broker</value>
   </data>
-  <data name="ErrorAPIVersion" xml:space="preserve">
-    <value>This tool requires API version {0}, while data broker reports {1}</value>
+  <data name="ErrorBrokerRequest" xml:space="preserve">
+    <value>Broker {0} refused to perform push request</value>
   </data>
-  <data name="ErrorBrokerConnection" xml:space="preserve">
-    <value>Failed querying broker API at '{0}'</value>
+  <data name="ErrorBrokerRequestException" xml:space="preserve">
+    <value>Error attempting to store {0} / delete {1} grains in {2}: {3}</value>
   </data>
-  <data name="ErrorBrokerConnectionException" xml:space="preserve">
-    <value>Connection to broker at {0} failed due to error: {1}</value>
+  <data name="MsgCmdStart" xml:space="preserve">
+    <value>Pushing grains from snapshot {0} to {1}</value>
   </data>
-  <data name="ErrorCheckpointMissing" xml:space="preserve">
-    <value>Snapshot checkpoints are missing, delete {0} and execute 'connect' command</value>
+  <data name="MsgCmdSuccess" xml:space="preserve">
+    <value>Successfully stored {0} / deleted {1} grains in {2}</value>
   </data>
-  <data name="ErrorConnectedState" xml:space="preserve">
-    <value>'{0}' is not connected to broker, execute 'connect' first</value>
+  <data name="MsgCmdSuccessNoop" xml:space="preserve">
+    <value>Latest checkpoint {0} has already been pushed</value>
   </data>
-  <data name="ErrorReadyState" xml:space="preserve">
-    <value>'{0}' contains no tracking snapshots</value>
+  <data name="StatusQueueDelete" xml:space="preserve">
+    <value>Grains queued for deletion:{0}{1}</value>
   </data>
-  <data name="ErrorSchemaVersion" xml:space="preserve">
-    <value>Broker schema version {0} is incompatible with snapshot {1}</value>
+  <data name="StatusQueueStore" xml:space="preserve">
+    <value>Grains queued for submission:{0}{1}</value>
   </data>
-  <data name="ErrorSnapshotVersion" xml:space="preserve">
-    <value>Version of snapshot {0} is not supported (actual: {1}, expected {2})</value>
+  <data name="WarnGrainNotFound" xml:space="preserve">
+    <value>Grain {0:D} not found in snapshot, correcting checkpoint {1}</value>
   </data>
 </root>

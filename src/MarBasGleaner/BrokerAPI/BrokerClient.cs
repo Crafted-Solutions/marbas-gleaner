@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
@@ -30,7 +31,7 @@ namespace MarBasGleaner.BrokerAPI
             {
                 return null;
             }
-            var resp = await _httpClient.GetAsync($"{ApiPrefix}SysInfo", cancellationToken);
+            using var resp = await _httpClient.GetAsync($"{ApiPrefix}SysInfo", cancellationToken);
             if (!HandleHttpError(resp))
             {
                 return await resp.Content.ReadFromJsonAsync<ServerInfo>(cancellationToken);
@@ -38,14 +39,14 @@ namespace MarBasGleaner.BrokerAPI
             return null;
         }
 
-        public async Task<IGrain?> GetGrain(Guid id, CancellationToken cancellationToken = default)
+        public async Task<IGrain?> GetGrain(Guid id, bool notFoundIsError = true, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return null;
             }
-            var resp = await _httpClient.GetAsync($"{ApiPrefix}Grain/{id:D}", cancellationToken);
-            if (!HandleHttpError(resp))
+            using var resp = await _httpClient.GetAsync($"{ApiPrefix}Grain/{id:D}", cancellationToken);
+            if (!((!notFoundIsError && HttpStatusCode.NotFound == resp.StatusCode) || HandleHttpError(resp)))
             {
                 var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<GrainYield>>(cancellationToken);
                 if (null != mbresult && mbresult.Success)
@@ -62,7 +63,7 @@ namespace MarBasGleaner.BrokerAPI
             {
                 return null;
             }
-            var resp = await _httpClient.GetAsync($"{ApiPrefix}Tree/{path}", cancellationToken);
+            using var resp = await _httpClient.GetAsync($"{ApiPrefix}Tree/{path}", cancellationToken);
             if (!HandleHttpError(resp))
             {
                 var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<IEnumerable<GrainYield>>>(cancellationToken);
@@ -86,7 +87,7 @@ namespace MarBasGleaner.BrokerAPI
             // TODO use Grain/Exists API when implemented
             await Parallel.ForEachAsync(ids, cancellationToken, async (id, token) =>
             {
-                if (null != await GetGrain(id, token))
+                if (null != await GetGrain(id, false, token))
                 {
                     result[id] = true;
                 }
@@ -95,7 +96,7 @@ namespace MarBasGleaner.BrokerAPI
             return result;
         }
 
-        public async Task<IEnumerable<IGrain>> ListGrains(Guid parentId, bool resursive = false, DateTime? mtimeFrom = null, DateTime? mtimeTo = null, bool includeParent = false, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<IGrain>> ListGrains(Guid parentId, bool recursive = false, DateTime? mtimeFrom = null, DateTime? mtimeTo = null, bool includeParent = false, CancellationToken cancellationToken = default)
         {
             IEnumerable<IGrain> result = new List<IGrain>();
             if (cancellationToken.IsCancellationRequested)
@@ -104,7 +105,7 @@ namespace MarBasGleaner.BrokerAPI
             }
             var sortOptions = new ListSortOption<GrainSortField>(GrainSortField.Path, ListSortOrder.Asc);
             var query = $"{ApiPrefix}Grain/{parentId:D}/List?sortOptions={EncodeJsonParameter(sortOptions)}";
-            if (resursive)
+            if (recursive)
             {
                 query += "&recursive=true";
             }
@@ -116,7 +117,7 @@ namespace MarBasGleaner.BrokerAPI
             {
                 query += $"&mTimeTo={EncodeJsonParameter(mtimeTo, true)}";
             }
-            var resp = await _httpClient.GetAsync(query, cancellationToken);
+            using var resp = await _httpClient.GetAsync(query, cancellationToken);
             if (!HandleHttpError(resp))
             {
                 var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<IEnumerable<GrainYield>>>(cancellationToken);
@@ -125,9 +126,9 @@ namespace MarBasGleaner.BrokerAPI
                     result = mbresult.Yield;
                 }
             }
-            if (includeParent)
+            if (includeParent && !recursive)
             {
-                var parent = await GetGrain(parentId, cancellationToken);
+                var parent = await GetGrain(parentId, cancellationToken: cancellationToken);
                 if (null != parent && (null == mtimeFrom || parent.MTime > mtimeFrom) && (null == mtimeTo || parent.MTime < mtimeTo))
                 {
                     result = result.Prepend(parent);
@@ -142,7 +143,7 @@ namespace MarBasGleaner.BrokerAPI
             {
                 return result;
             }
-            var resp = await _httpClient.GetAsync($"{ApiPrefix}Grain/{id:D}/Path?includeSelf=true", cancellationToken);
+            using var resp = await _httpClient.GetAsync($"{ApiPrefix}Grain/{id:D}/Path?includeSelf=true", cancellationToken);
             if (!HandleHttpError(resp))
             {
                 var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<IEnumerable<GrainYield>>>(cancellationToken);
@@ -154,14 +155,14 @@ namespace MarBasGleaner.BrokerAPI
             return result;
         }
 
-        public async Task<IEnumerable<IGrainTransportable>> ImportGrains(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<IGrainTransportable>> PullGrains(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
         {
             var result = Enumerable.Empty<IGrainTransportable>();
             if (cancellationToken.IsCancellationRequested)
             {
                 return result;
             }
-            var resp = await _httpClient.PostAsJsonAsync($"{ApiPrefix}Transport/Out", ids, JsonOptions, cancellationToken);
+            using var resp = await _httpClient.PostAsJsonAsync($"{ApiPrefix}Transport/Out", ids, JsonOptions, cancellationToken);
             if (!HandleHttpError(resp))
             {
                 var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<IEnumerable<GrainTransportable>>>(JsonDefaults.DeserializationOptions, cancellationToken);
@@ -171,6 +172,40 @@ namespace MarBasGleaner.BrokerAPI
                 }
             }
             return result;
+        }
+
+        public async Task<IGrainImportResults?> PushGrains(ISet<IGrainTransportable> grains, ISet<Guid>? grainsToDelete = null, CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+            if (!grains.Any() && true != grainsToDelete?.Any())
+            {
+                var result = new GrainImportResults()
+                {
+                    ImportedCount = 0
+                };
+                result.AddFeedback(new BrokerOperationFeedback("Nothing to export"));
+                return result;
+            }
+
+            var req = new GrainImportModel()
+            {
+                Grains = grains,
+                GrainsToDelete = grainsToDelete,
+                DuplicatesHandling = DuplicatesHandlingStrategy.Merge
+            };
+            using var resp = await _httpClient.PutAsJsonAsync($"{ApiPrefix}Transport/In", req, JsonOptions, cancellationToken);
+            if (!HandleHttpError(resp))
+            {
+                var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<GrainImportResults>>(JsonDefaults.DeserializationOptions, cancellationToken);
+                if (true == mbresult?.Success)
+                {
+                    return mbresult?.Yield;
+                }
+            }
+            return null;
         }
 
         #endregion
