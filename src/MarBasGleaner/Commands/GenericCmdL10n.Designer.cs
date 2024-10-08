@@ -70,11 +70,29 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This tool requires API version {0}, while data broker reports {1}.
+        /// </summary>
+        internal static string ErrorAPIVersion {
+            get {
+                return ResourceManager.GetString("ErrorAPIVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed querying broker API at &apos;{0}&apos;.
         /// </summary>
         internal static string ErrorBrokerConnection {
             get {
                 return ResourceManager.GetString("ErrorBrokerConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection to broker at {0} failed due to error: {1}.
+        /// </summary>
+        internal static string ErrorBrokerConnectionException {
+            get {
+                return ResourceManager.GetString("ErrorBrokerConnectionException", resourceCulture);
             }
         }
         
@@ -111,6 +129,15 @@ namespace MarBasGleaner.Commands {
         internal static string ErrorSchemaVersion {
             get {
                 return ResourceManager.GetString("ErrorSchemaVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version of snapshot {0} is not supported (actual: {1}, expected {2}).
+        /// </summary>
+        internal static string ErrorSnapshotVersion {
+            get {
+                return ResourceManager.GetString("ErrorSnapshotVersion", resourceCulture);
             }
         }
     }

@@ -118,27 +118,39 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="CmdDesc" xml:space="preserve">
-    <value>Shows differences between grains in snapshot and MarBas broker</value>
+    <value>Pushes most recent grains from snapshot into MarBas broker</value>
   </data>
-  <data name="ErrorGrainLoad" xml:space="preserve">
-    <value>Failed to load grain {0:D} from {1}</value>
+  <data name="ErrorBrokerRequest" xml:space="preserve">
+    <value>Broker {0} refused to perform push request</value>
   </data>
-  <data name="ErrorMissingGrainID" xml:space="preserve">
-    <value>Missing second grain ID for comparison mode {0}</value>
-  </data>
-  <data name="IdArgDesc" xml:space="preserve">
-    <value>ID of the grain to use as comparison base, single argument version compares snapshot with broker, 2 different IDs indicate snapshot version of both by defaulft (s. --mode option)</value>
-  </data>
-  <data name="ModeArgDesc" xml:space="preserve">
-    <value>Comparison mode applied to grains identified by &lt;grain-ids&gt; argument, {0} is automatic mode for single ID, {1} - for 2 distinct IDs</value>
+  <data name="ErrorBrokerRequestException" xml:space="preserve">
+    <value>Error attempting to store {0} / delete {1} grains in {2}: {3}</value>
   </data>
   <data name="MsgCmdStart" xml:space="preserve">
-    <value>Comparing grain {0:D} ({1}) to {2:D} ({3})</value>
+    <value>Pushing grains from snapshot {0} to {1}</value>
   </data>
-  <data name="MsgCmdStartSameID" xml:space="preserve">
-    <value>Comparing grain {0:D} ({1}) to itself ({3})</value>
+  <data name="MsgCmdSuccess" xml:space="preserve">
+    <value>Successfully stored {0} / deleted {1} grains in {2}</value>
   </data>
   <data name="MsgCmdSuccessNoop" xml:space="preserve">
-    <value>Grains are identical</value>
+    <value>Latest checkpoint {0} has already been pushed</value>
+  </data>
+  <data name="StartingCheckpointOptionDesc" xml:space="preserve">
+    <value>Checkpoint number to start operation with, -1 for latest</value>
+  </data>
+  <data name="StatusQueueDelete" xml:space="preserve">
+    <value>Grains queued for deletion:</value>
+  </data>
+  <data name="StatusQueueStore" xml:space="preserve">
+    <value>Grains queued for submission:</value>
+  </data>
+  <data name="StrategyOptionDesc" xml:space="preserve">
+    <value>Strategy for handling grains existing on both sides - in the snapshot and broker</value>
+  </data>
+  <data name="WarnCmdResult" xml:space="preserve">
+    <value>Stored {0} / deleted {1} grains in {2} with warnings / errors</value>
+  </data>
+  <data name="WarnGrainNotFound" xml:space="preserve">
+    <value>Grain {0:D} not found in snapshot, correcting checkpoint {1}</value>
   </data>
 </root>

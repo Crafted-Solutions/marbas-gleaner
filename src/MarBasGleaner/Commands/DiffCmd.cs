@@ -30,12 +30,12 @@ namespace MarBasGleaner.Commands
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
-            AddArgument(new Argument<Guid>("grain-ids", "ID of the grain to use as comparison base, single argument version compares snapshot with broker, 2 different IDs indicate snapshot version of both by defaulft (s. --mode option)")
+            AddArgument(new Argument<Guid>("grain-ids", DiffCmdL10n.IdArgDesc)
             {
                 Arity = new ArgumentArity(1, 2)
             });
             base.Setup();
-            AddOption(new Option<CompareMode>(new[] { "--mode", "-m" }, () => CompareMode.Auto, $"Comparison mode applied to grains identified by <grain-ids> argument, {Enum.GetName(CompareMode.Snapshot2Broker)} is default for single ID, {Enum.GetName(CompareMode.Snapshot)} - for 2 distinct IDs"));
+            AddOption(new Option<CompareMode>(new[] { "--mode", "-m" }, () => CompareMode.Auto, string.Format(DiffCmdL10n.ModeArgDesc, Enum.GetName(CompareMode.Snapshot2Broker), Enum.GetName(CompareMode.Snapshot))));
         }
 
         internal static void DisplayDiff(IGrainTransportable source, IGrainTransportable target)
@@ -75,7 +75,7 @@ namespace MarBasGleaner.Commands
             }
             else
             {
-                DisplayInfo($"Grains are identical");
+                DisplayInfo(DiffCmdL10n.MsgCmdSuccessNoop);
             }
             Console.ResetColor();
         }
@@ -93,7 +93,7 @@ namespace MarBasGleaner.Commands
                 var ctoken = context.GetCancellationToken();
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
 
-                var result = CheckSnapshot(snapshotDir);
+                var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
                 {
                     return result;
@@ -102,7 +102,7 @@ namespace MarBasGleaner.Commands
                 var ids = (GrainIds.FirstOrDefault(), GrainIds.LastOrDefault());
                 if ((CompareMode.Snapshot == Mode || CompareMode.Broker == Mode) && ids.Item1 == ids.Item2)
                 {
-                    return ReportError(CmdResultCode.ParameterError, $"Missing second grain ID for comparison mode {Enum.GetName(Mode)}");
+                    return ReportError(CmdResultCode.ParameterError, string.Format(DiffCmdL10n.ErrorMissingGrainID, Enum.GetName(Mode)));
                 }
 
                 if (CompareMode.Auto == Mode)
@@ -110,7 +110,8 @@ namespace MarBasGleaner.Commands
                     Mode = ids.Item1 == ids.Item2 ? CompareMode.Snapshot2Broker : CompareMode.Snapshot;
                 }
 
-                DisplayMessage($"Comparing {ids.Item1:D} ({Enum.GetName(SourceGrainMode)}) to {(ids.Item1 == ids.Item2 ? "itself" : $"{ids.Item2:D}")} ({Enum.GetName(TargetGrainMode)})", MessageSeparatorOption.After);
+                DisplayMessage(string.Format(ids.Item1 == ids.Item2 ? DiffCmdL10n.MsgCmdStartSameID : DiffCmdL10n.MsgCmdStart, ids.Item1, Enum.GetName(SourceGrainMode),
+                    ids.Item2, Enum.GetName(TargetGrainMode)), MessageSeparatorOption.After);
 
                 (IGrainTransportable?, IGrainTransportable?) grains = (null, null);
                 if (CompareMode.Broker == SourceGrainMode || CompareMode.Broker == TargetGrainMode)
@@ -126,7 +127,13 @@ namespace MarBasGleaner.Commands
                     }
 
                     using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
-                    var brokerGrains = await client.ImportGrains(idsToFetch, ctoken);
+                    var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
+                    if (CmdResultCode.Success != brokerStat.Code)
+                    {
+                        return (int)brokerStat.Code;
+                    }
+
+                    var brokerGrains = await client.PullGrains(idsToFetch, ctoken);
                     foreach (var grain in brokerGrains)
                     {
                         if (CompareMode.Broker == SourceGrainMode && grain.Id == ids.Item1)
@@ -143,18 +150,18 @@ namespace MarBasGleaner.Commands
                 {
                     grains.Item1 = await snapshotDir.LoadGrainById<GrainTransportable>(ids.Item1, cancellationToken: ctoken);
                 }
-                if (CompareMode.Snapshot == TargetGrainMode && ids.Item1 != ids.Item2)
+                if (CompareMode.Snapshot == TargetGrainMode)
                 {
                     grains.Item2 = await snapshotDir.LoadGrainById<GrainTransportable>(ids.Item2, cancellationToken: ctoken);
                 }
 
                 if (null == grains.Item1)
                 {
-                    return ReportError(CmdResultCode.GrainLoadError, $"Failed to load grain {ids.Item1:D} from {Enum.GetName(SourceGrainMode)}");
+                    return ReportError(CmdResultCode.GrainLoadError, string.Format(DiffCmdL10n.ErrorGrainLoad, ids.Item1, Enum.GetName(SourceGrainMode)));
                 }
                 if (null == grains.Item2)
                 {
-                    return ReportError(CmdResultCode.GrainLoadError, $"Failed to load grain {ids.Item2:D} from {Enum.GetName(TargetGrainMode)}");
+                    return ReportError(CmdResultCode.GrainLoadError, string.Format(DiffCmdL10n.ErrorGrainLoad, ids.Item2, Enum.GetName(TargetGrainMode)));
                 }
 
                 DisplayDiff(grains.Item1, grains.Item2);

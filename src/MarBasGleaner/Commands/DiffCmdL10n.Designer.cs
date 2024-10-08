@@ -68,5 +68,68 @@ namespace MarBasGleaner.Commands {
                 return ResourceManager.GetString("CmdDesc", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to load grain {0:D} from {1}.
+        /// </summary>
+        internal static string ErrorGrainLoad {
+            get {
+                return ResourceManager.GetString("ErrorGrainLoad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing second grain ID for comparison mode {0}.
+        /// </summary>
+        internal static string ErrorMissingGrainID {
+            get {
+                return ResourceManager.GetString("ErrorMissingGrainID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ID of the grain to use as comparison base, single argument version compares snapshot with broker, 2 different IDs indicate snapshot version of both by defaulft (s. --mode option).
+        /// </summary>
+        internal static string IdArgDesc {
+            get {
+                return ResourceManager.GetString("IdArgDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comparison mode applied to grains identified by &lt;grain-ids&gt; argument, {0} is automatic mode for single ID, {1} - for 2 distinct IDs.
+        /// </summary>
+        internal static string ModeArgDesc {
+            get {
+                return ResourceManager.GetString("ModeArgDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comparing grain {0:D} ({1}) to {2:D} ({3}).
+        /// </summary>
+        internal static string MsgCmdStart {
+            get {
+                return ResourceManager.GetString("MsgCmdStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comparing grain {0:D} ({1}) to itself ({3}).
+        /// </summary>
+        internal static string MsgCmdStartSameID {
+            get {
+                return ResourceManager.GetString("MsgCmdStartSameID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grains are identical.
+        /// </summary>
+        internal static string MsgCmdSuccessNoop {
+            get {
+                return ResourceManager.GetString("MsgCmdSuccessNoop", resourceCulture);
+            }
+        }
     }
 }

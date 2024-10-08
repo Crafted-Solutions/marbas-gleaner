@@ -78,14 +78,14 @@ namespace MarBasGleaner.Commands
 
                 using var client = _trackingService.GetBrokerClient(connection);
 
-                var brokerStat = await CheckBrokerConnection(client, cancellationToken: ctoken);
+                var brokerStat = await ValidateBrokerConnection(client, cancellationToken: ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
                 snapshot.SchemaVersion = brokerStat.Info!.SchemaVersion;
 
-                var anchor = anchorId.Equals(Guid.Empty) ? await client.GetGrain(PathOrId.Remove(0, $"/{SchemaDefaults.RootName}/".Length), ctoken) : await client.GetGrain(anchorId, ctoken);
+                var anchor = anchorId.Equals(Guid.Empty) ? await client.GetGrain(PathOrId.Remove(0, $"/{SchemaDefaults.RootName}/".Length), ctoken) : await client.GetGrain(anchorId, cancellationToken: ctoken);
                 if (null == anchor)
                 {
                     return ReportError(CmdResultCode.AnchorGrainError, string.Format(TrackCmdL10n.ErrorAnchorLoad, PathOrId));
@@ -124,7 +124,7 @@ namespace MarBasGleaner.Commands
                     }
                     else
                     {
-                        var anchorImp = (await client.ImportGrains(new[] { anchor.Id }, ctoken)).FirstOrDefault();
+                        var anchorImp = (await client.PullGrains(new[] { anchor.Id }, ctoken)).FirstOrDefault();
                         if (null == anchorImp)
                         {
                             return ReportError(CmdResultCode.AnchorGrainError, string.Format(TrackCmdL10n.ErrorAnchorImport));
@@ -154,7 +154,7 @@ namespace MarBasGleaner.Commands
                     return true;
                 }).Select(x => x.Id);
 
-                var grainsImported = await client.ImportGrains(filteredIds, ctoken);
+                var grainsImported = await client.PullGrains(filteredIds, ctoken);
                 await Parallel.ForEachAsync(grainsImported, ctoken, async (grain, token) =>
                 {
                     DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, grain.Id, grain.Path ?? "/"));

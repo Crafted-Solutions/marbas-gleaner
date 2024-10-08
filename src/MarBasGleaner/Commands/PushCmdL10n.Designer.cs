@@ -22,14 +22,14 @@ namespace MarBasGleaner.Commands {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class StatusCmdL10n {
+    internal class PushCmdL10n {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal StatusCmdL10n() {
+        internal PushCmdL10n() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace MarBasGleaner.Commands {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarBasGleaner.Commands.StatusCmdL10n", typeof(StatusCmdL10n).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarBasGleaner.Commands.PushCmdL10n", typeof(PushCmdL10n).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,16 +61,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assume broker has been reset since last sync.
-        /// </summary>
-        internal static string AssumeResetOptionDesc {
-            get {
-                return ResourceManager.GetString("AssumeResetOptionDesc", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shows status of MarBas grains in a tracking snapshot.
+        ///   Looks up a localized string similar to Pushes most recent grains from snapshot into MarBas broker.
         /// </summary>
         internal static string CmdDesc {
             get {
@@ -79,7 +70,25 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Comparing snapshot {0} with {1}.
+        ///   Looks up a localized string similar to Broker {0} refused to perform push request.
+        /// </summary>
+        internal static string ErrorBrokerRequest {
+            get {
+                return ResourceManager.GetString("ErrorBrokerRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error attempting to store {0} / delete {1} grains in {2}: {3}.
+        /// </summary>
+        internal static string ErrorBrokerRequestException {
+            get {
+                return ResourceManager.GetString("ErrorBrokerRequestException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pushing grains from snapshot {0} to {1}.
         /// </summary>
         internal static string MsgCmdStart {
             get {
@@ -88,16 +97,16 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Status legend (left side - snapshot, right side - broker):.
+        ///   Looks up a localized string similar to Successfully stored {0} / deleted {1} grains in {2}.
         /// </summary>
-        internal static string MsgCmdSuccessLegend {
+        internal static string MsgCmdSuccess {
             get {
-                return ResourceManager.GetString("MsgCmdSuccessLegend", resourceCulture);
+                return ResourceManager.GetString("MsgCmdSuccess", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Snapshot {0} is uptodate.
+        ///   Looks up a localized string similar to Latest checkpoint {0} has already been pushed.
         /// </summary>
         internal static string MsgCmdSuccessNoop {
             get {
@@ -106,20 +115,56 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List all grains, even unmodified ones.
+        ///   Looks up a localized string similar to Checkpoint number to start operation with, -1 for latest.
         /// </summary>
-        internal static string ShowAllOptionDesc {
+        internal static string StartingCheckpointOptionDesc {
             get {
-                return ResourceManager.GetString("ShowAllOptionDesc", resourceCulture);
+                return ResourceManager.GetString("StartingCheckpointOptionDesc", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Snapshot has been modified externally, results may be inaccurate.
+        ///   Looks up a localized string similar to Grains queued for deletion:.
         /// </summary>
-        internal static string WarnSnapshotModified {
+        internal static string StatusQueueDelete {
             get {
-                return ResourceManager.GetString("WarnSnapshotModified", resourceCulture);
+                return ResourceManager.GetString("StatusQueueDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grains queued for submission:.
+        /// </summary>
+        internal static string StatusQueueStore {
+            get {
+                return ResourceManager.GetString("StatusQueueStore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strategy for handling grains existing on both sides - in the snapshot and broker.
+        /// </summary>
+        internal static string StrategyOptionDesc {
+            get {
+                return ResourceManager.GetString("StrategyOptionDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stored {0} / deleted {1} grains in {2} with warnings / errors.
+        /// </summary>
+        internal static string WarnCmdResult {
+            get {
+                return ResourceManager.GetString("WarnCmdResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grain {0:D} not found in snapshot, correcting checkpoint {1}.
+        /// </summary>
+        internal static string WarnGrainNotFound {
+            get {
+                return ResourceManager.GetString("WarnGrainNotFound", resourceCulture);
             }
         }
     }

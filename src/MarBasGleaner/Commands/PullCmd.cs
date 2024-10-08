@@ -32,7 +32,7 @@ namespace MarBasGleaner.Commands
                 var ctoken = context.GetCancellationToken();
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
 
-                var result = CheckSnapshot(snapshotDir);
+                var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
                 {
                     return result;
@@ -40,7 +40,7 @@ namespace MarBasGleaner.Commands
 
                 using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
 
-                var brokerStat = await CheckBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
+                var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
@@ -64,7 +64,7 @@ namespace MarBasGleaner.Commands
                     mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: ctoken);
 
                 int changes = 0;
-                var conflated = await snapshotDir.LoadConflatedCheckpoint(ctoken);
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: ctoken);
                 var pathsToCheck = new HashSet<string>();
                 var incoming = new Dictionary<Guid, (GrainTrackingStatus local, GrainTrackingStatus broker)>();
 
@@ -97,7 +97,7 @@ namespace MarBasGleaner.Commands
                     }
                 }
 
-                var imports = await client.ImportGrains(incoming.Keys, ctoken);
+                var imports = await client.PullGrains(incoming.Keys, ctoken);
                 foreach (var grain in imports)
                 {
                     var import = true;
@@ -228,10 +228,7 @@ namespace MarBasGleaner.Commands
                 }
                 else
                 {
-                    if (GrainTrackingStatus.New == status)
-                    {
-                        checkpoint.Additions.Add(grain.Id);
-                    }
+                    checkpoint.Modifications.Add(grain.Id);
                     if (checkpoint.Latest < grain.MTime)
                     {
                         checkpoint.Latest = grain.MTime;

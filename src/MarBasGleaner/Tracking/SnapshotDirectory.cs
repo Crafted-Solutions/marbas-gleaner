@@ -154,7 +154,7 @@ namespace MarBasGleaner.Tracking
                     if (null == grain)
                         continue;
 
-                    _sharedCheckpoint.Additions.Add(grain.Id);
+                    _sharedCheckpoint.Modifications.Add(grain.Id);
                     if (grain.MTime > _sharedCheckpoint.Latest)
                     {
                         _sharedCheckpoint.Latest = grain.MTime;
@@ -281,6 +281,27 @@ namespace MarBasGleaner.Tracking
             return File.Exists(Path.Combine(_fullPath, GetCheckpointFileName(checkpointNum)));
         }
 
+        public async Task AdoptCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
+        {
+            if (null == _localState)
+            {
+                throw new ApplicationException("Snapshot is not connected to broker");
+            }
+            if (-1 == checkpointNum)
+            {
+                _localState.ActiveCheckpoint = _sharedCheckpoint!;
+            }
+            else
+            {
+                var cp = await LoadCheckpoint(checkpointNum, cancellationToken);
+                if (null == cp)
+                {
+                    throw new ApplicationException($"Checkpoint {checkpointNum} not found");
+                }
+                _localState.ActiveCheckpoint = cp;
+            }
+        }
+
         public async Task<SnapshotCheckpoint?> LoadCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
         {
             if (!IsDirectory || cancellationToken.IsCancellationRequested)
@@ -303,22 +324,26 @@ namespace MarBasGleaner.Tracking
             return result;
         }
 
-        public async Task<SnapshotCheckpoint> LoadConflatedCheckpoint(CancellationToken cancellationToken = default)
+        public async Task<SnapshotCheckpoint> LoadConflatedCheckpoint(int startingWith = -1, CancellationToken cancellationToken = default)
         {
             var result = _localState?.ActiveCheckpoint.Clone(true) ?? new();
             if (!IsDirectory || cancellationToken.IsCancellationRequested || null == SharedCheckpoint || result.IsSame(SharedCheckpoint))
             {
                 return result;
             }
-            for (var i = Math.Max(result.Ordinal, 1); i <= SharedCheckpoint.Ordinal; i++)
+            if (1 > startingWith)
+            {
+                startingWith = Math.Max(result.Ordinal, 1);
+            }
+            for (var i = startingWith; i <= SharedCheckpoint.Ordinal; i++)
             {
                 var cp = await LoadCheckpoint(i, cancellationToken);
                 if (null == cp || result.IsSame(cp))
                 {
                     continue;
                 }
-                result.Additions.UnionWith(cp.Additions);
-                result.Additions.ExceptWith(cp.Deletions);
+                result.Modifications.UnionWith(cp.Modifications);
+                result.Modifications.ExceptWith(cp.Deletions);
                 result.Deletions.UnionWith(cp.Deletions);
                 result.Ordinal = cp.Ordinal;
                 result.Latest = cp.Latest;
@@ -405,7 +430,7 @@ namespace MarBasGleaner.Tracking
             }
             if (updateCheckpoint && null != _localState?.ActiveCheckpoint)
             {
-                _localState.ActiveCheckpoint.Additions.Add(grain.Id);
+                _localState.ActiveCheckpoint.Modifications.Add(grain.Id);
                 _localState.ActiveCheckpoint.Deletions.Remove(grain.Id);
             }
             var result = Path.Combine(_fullPath, GetGrainFileName(grain, temp));
