@@ -139,8 +139,11 @@ namespace MarBasGleaner.Commands
                 Console.Write(SeparatorLine);
                 Console.Write(Environment.NewLine);
             }
-            Console.Write(message);
-            Console.Write(Environment.NewLine);
+            if (!string.IsNullOrEmpty(message))
+            {
+                Console.Write(message);
+                Console.Write(Environment.NewLine);
+            }
             if (MessageSeparatorOption.After == (MessageSeparatorOption.After & separatorOption))
             {
                 Console.Write(SeparatorLine);

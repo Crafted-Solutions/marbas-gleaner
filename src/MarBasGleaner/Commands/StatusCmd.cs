@@ -19,12 +19,14 @@ namespace MarBasGleaner.Commands
         {
             base.Setup();
             AddOption(new Option<bool>("--show-all", StatusCmdL10n.ShowAllOptionDesc));
+            AddOption(new Option<bool>("--assume-reset", StatusCmdL10n.AssumeResetOptionDesc));
         }
 
         public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
 
             public bool ShowAll { get; set; }
+            public bool AssumeReset { get; set; }
 
             public override async Task<int> InvokeAsync(InvocationContext context)
             {
@@ -86,10 +88,11 @@ namespace MarBasGleaner.Commands
                         {
                             status.Item1 = GrainTrackingStatus.Obscure;
                         }
-                        else if (GrainTrackingStatus.Uptodate == status.Item1 && GrainTrackingStatus.Uptodate == status.Item2 && grain.MTime > snapshotDir.LocalCheckpoint.Latest)
+                        else if (GrainTrackingStatus.Uptodate == status.Item1 && GrainTrackingStatus.Uptodate == status.Item2
+                            && grain.MTime > (AssumeReset ? SnapshotCheckpoint.BuiltInGrainsMTime : snapshotDir.LocalCheckpoint.Latest))
                         {
                             status.Item1 = GrainTrackingStatus.Modified;
-                            if (!isCheckpointInSync && !snapshotDir.LocalCheckpoint.Modifications.Contains(grain.Id))
+                            if (AssumeReset || (!isCheckpointInSync && !snapshotDir.LocalCheckpoint.Modifications.Contains(grain.Id)))
                             {
                                 additionsToCheck[grain.Id] = grain;
                                 pending = true;

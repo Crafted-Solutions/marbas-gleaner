@@ -1,5 +1,7 @@
-﻿using System.CommandLine.Invocation;
+﻿using System.CommandLine;
+using System.CommandLine.Invocation;
 using MarBasGleaner.Tracking;
+using MarBasSchema.Grain;
 using MarBasSchema.Transport;
 
 namespace MarBasGleaner.Commands
@@ -13,8 +15,19 @@ namespace MarBasGleaner.Commands
             Setup();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
+        protected override void Setup()
+        {
+            base.Setup();
+            AddOption(new Option<int>(new[] { "-c", "--starting-checkpoint" }, () => -1, PushCmdL10n.StartingCheckpointOptionDesc));
+            AddOption(new Option<DuplicatesHandlingStrategy>(new[] { "-s", "--strategy" }, () => DuplicatesHandlingStrategy.OverwriteSkipNewer, PushCmdL10n.StrategyOptionDesc));
+        }
+
         public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
+            public int StartingCheckpoint { get; set; } = -1;
+            public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
+
             public async override Task<int> InvokeAsync(InvocationContext context)
             {
                 var ctoken = context.GetCancellationToken();
@@ -37,6 +50,10 @@ namespace MarBasGleaner.Commands
                 DisplayMessage(string.Format(PushCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
 
                 var isSafeCheckpoint = snapshotDir.LocalCheckpoint!.IsSame(snapshotDir.SharedCheckpoint);
+                if (-1 < StartingCheckpoint)
+                {
+                    snapshotDir.LastPushCheckpoint = StartingCheckpoint;
+                }
                 if (isSafeCheckpoint && snapshotDir.LastPushCheckpoint == snapshotDir.SharedCheckpoint!.Ordinal)
                 {
                     DisplayInfo(string.Format(PushCmdL10n.MsgCmdSuccessNoop, snapshotDir.LastPushCheckpoint));
@@ -64,30 +81,38 @@ namespace MarBasGleaner.Commands
                 }
                 if (0 < grainsToStore.Count)
                 {
-                    DisplayMessage(string.Format(PushCmdL10n.StatusQueueStore, Environment.NewLine, grainsToStore.Aggregate(string.Empty, (aggr, grain) =>
+                    DisplayMessage(PushCmdL10n.StatusQueueStore);
+                    foreach (var g in grainsToStore)
                     {
-                        if (0 < aggr.Length)
-                        {
-                            aggr += ", ";
-                        }
-                        aggr += $"{grain.Id:D}";
-                        return aggr;
-                    })));
+                        DisplayMessage($"{g.Id:D} ({g.Path ?? "\\"}");
+                    }
                 }
                 if (0 < grainsToDelete.Count)
                 {
-                    DisplayMessage(string.Format(PushCmdL10n.StatusQueueDelete, Environment.NewLine, string.Join(", ", grainsToDelete)));
+                    DisplayMessage(PushCmdL10n.StatusQueueDelete);
+                    foreach (var id in grainsToDelete)
+                    {
+                        DisplayMessage($"{id:D}");
+                    }
                 }
 
                 try
                 {
-                    var importResult = await client.PushGrains(grainsToStore, grainsToDelete, ctoken);
+                    var importResult = await client.PushGrains(grainsToStore, grainsToDelete, Strategy, ctoken);
                     if (null == importResult)
                     {
                         return ReportError(CmdResultCode.BrokerPushError, string.Format(PushCmdL10n.ErrorBrokerRequest, client.APIUrl));
                     }
 
-                    DisplayMessage(string.Format(PushCmdL10n.MsgCmdSuccess, importResult.ImportedCount, importResult.DeletedCount, client.APIUrl), MessageSeparatorOption.Before);
+                    if (null != importResult.Feedback && importResult.Feedback.Any(x => LogLevel.Warning <= x.FeedbackType))
+                    {
+                        DisplayMessage(string.Empty, MessageSeparatorOption.Before);
+                        DisplayWarning(string.Format(PushCmdL10n.WarnCmdResult, importResult.ImportedCount, importResult.DeletedCount, client.APIUrl));
+                    }
+                    else
+                    {
+                        DisplayMessage(string.Format(PushCmdL10n.MsgCmdSuccess, importResult.ImportedCount, importResult.DeletedCount, client.APIUrl), MessageSeparatorOption.Before);
+                    }
                     if (null != importResult.Feedback)
                     {
                         foreach (var feedback in importResult.Feedback)
@@ -108,8 +133,12 @@ namespace MarBasGleaner.Commands
                     return ReportError(CmdResultCode.BrokerPushError, string.Format(PushCmdL10n.ErrorBrokerRequestException, grainsToStore.Count, grainsToDelete.Count, client.APIUrl, e.Message));
                 }
 
-                snapshotDir.Snapshot.Updated = DateTime.UtcNow;
-                await snapshotDir.StoreMetadata(cancellationToken: ctoken);
+                snapshotDir.LastPushCheckpoint = conflated.Ordinal;
+                if (!isSafeCheckpoint && 0 == snapshotDir.LocalCheckpoint.Ordinal)
+                {
+                    await snapshotDir.AdoptCheckpoint(cancellationToken: ctoken);
+                }
+                await snapshotDir.StoreMetadata(false, ctoken);
 
                 return result;
             }

@@ -61,6 +61,15 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assume broker has been reset since last sync.
+        /// </summary>
+        internal static string AssumeResetOptionDesc {
+            get {
+                return ResourceManager.GetString("AssumeResetOptionDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Shows status of MarBas grains in a tracking snapshot.
         /// </summary>
         internal static string CmdDesc {

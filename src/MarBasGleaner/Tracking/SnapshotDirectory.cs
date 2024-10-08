@@ -281,6 +281,27 @@ namespace MarBasGleaner.Tracking
             return File.Exists(Path.Combine(_fullPath, GetCheckpointFileName(checkpointNum)));
         }
 
+        public async Task AdoptCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
+        {
+            if (null == _localState)
+            {
+                throw new ApplicationException("Snapshot is not connected to broker");
+            }
+            if (-1 == checkpointNum)
+            {
+                _localState.ActiveCheckpoint = _sharedCheckpoint!;
+            }
+            else
+            {
+                var cp = await LoadCheckpoint(checkpointNum, cancellationToken);
+                if (null == cp)
+                {
+                    throw new ApplicationException($"Checkpoint {checkpointNum} not found");
+                }
+                _localState.ActiveCheckpoint = cp;
+            }
+        }
+
         public async Task<SnapshotCheckpoint?> LoadCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
         {
             if (!IsDirectory || cancellationToken.IsCancellationRequested)

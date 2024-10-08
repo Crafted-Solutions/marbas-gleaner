@@ -115,7 +115,16 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Grains queued for deletion:{0}{1}.
+        ///   Looks up a localized string similar to Checkpoint number to start operation with, -1 for latest.
+        /// </summary>
+        internal static string StartingCheckpointOptionDesc {
+            get {
+                return ResourceManager.GetString("StartingCheckpointOptionDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grains queued for deletion:.
         /// </summary>
         internal static string StatusQueueDelete {
             get {
@@ -124,11 +133,29 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Grains queued for submission:{0}{1}.
+        ///   Looks up a localized string similar to Grains queued for submission:.
         /// </summary>
         internal static string StatusQueueStore {
             get {
                 return ResourceManager.GetString("StatusQueueStore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strategy for handling grains existing on both sides - in the snapshot and broker.
+        /// </summary>
+        internal static string StrategyOptionDesc {
+            get {
+                return ResourceManager.GetString("StrategyOptionDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stored {0} / deleted {1} grains in {2} with warnings / errors.
+        /// </summary>
+        internal static string WarnCmdResult {
+            get {
+                return ResourceManager.GetString("WarnCmdResult", resourceCulture);
             }
         }
         

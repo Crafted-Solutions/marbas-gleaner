@@ -135,11 +135,20 @@
   <data name="MsgCmdSuccessNoop" xml:space="preserve">
     <value>Latest checkpoint {0} has already been pushed</value>
   </data>
+  <data name="StartingCheckpointOptionDesc" xml:space="preserve">
+    <value>Checkpoint number to start operation with, -1 for latest</value>
+  </data>
   <data name="StatusQueueDelete" xml:space="preserve">
-    <value>Grains queued for deletion:{0}{1}</value>
+    <value>Grains queued for deletion:</value>
   </data>
   <data name="StatusQueueStore" xml:space="preserve">
-    <value>Grains queued for submission:{0}{1}</value>
+    <value>Grains queued for submission:</value>
+  </data>
+  <data name="StrategyOptionDesc" xml:space="preserve">
+    <value>Strategy for handling grains existing on both sides - in the snapshot and broker</value>
+  </data>
+  <data name="WarnCmdResult" xml:space="preserve">
+    <value>Stored {0} / deleted {1} grains in {2} with warnings / errors</value>
   </data>
   <data name="WarnGrainNotFound" xml:space="preserve">
     <value>Grain {0:D} not found in snapshot, correcting checkpoint {1}</value>

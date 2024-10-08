@@ -84,16 +84,17 @@ namespace MarBasGleaner.BrokerAPI
 
 
             var result = new Dictionary<Guid, bool>(ids.Select(x => new KeyValuePair<Guid, bool>(x, false)));
-            // TODO use Grain/Exists API when implemented
-            await Parallel.ForEachAsync(ids, cancellationToken, async (id, token) =>
+            
+            using var resp = await _httpClient.PostAsJsonAsync($"{ApiPrefix}Grain/VerifyExist", ids, cancellationToken);
+            if (!HandleHttpError(resp))
             {
-                if (null != await GetGrain(id, false, token))
+                var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<IDictionary<Guid, bool>>>(cancellationToken);
+                if (true == mbresult?.Success && null != mbresult?.Yield)
                 {
-                    result[id] = true;
+                    return mbresult.Yield;
                 }
-            });
-
-            return result;
+            }
+            throw new ApplicationException($"API {resp.RequestMessage?.RequestUri} hasn't return expected result");
         }
 
         public async Task<IEnumerable<IGrain>> ListGrains(Guid parentId, bool recursive = false, DateTime? mtimeFrom = null, DateTime? mtimeTo = null, bool includeParent = false, CancellationToken cancellationToken = default)
@@ -174,7 +175,7 @@ namespace MarBasGleaner.BrokerAPI
             return result;
         }
 
-        public async Task<IGrainImportResults?> PushGrains(ISet<IGrainTransportable> grains, ISet<Guid>? grainsToDelete = null, CancellationToken cancellationToken = default)
+        public async Task<IGrainImportResults?> PushGrains(ISet<IGrainTransportable> grains, ISet<Guid>? grainsToDelete = null, DuplicatesHandlingStrategy duplicatesHandling = DuplicatesHandlingStrategy.Merge, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -194,16 +195,13 @@ namespace MarBasGleaner.BrokerAPI
             {
                 Grains = grains,
                 GrainsToDelete = grainsToDelete,
-                DuplicatesHandling = DuplicatesHandlingStrategy.Merge
+                DuplicatesHandling = duplicatesHandling
             };
             using var resp = await _httpClient.PutAsJsonAsync($"{ApiPrefix}Transport/In", req, JsonOptions, cancellationToken);
             if (!HandleHttpError(resp))
             {
                 var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<GrainImportResults>>(JsonDefaults.DeserializationOptions, cancellationToken);
-                if (true == mbresult?.Success)
-                {
-                    return mbresult?.Yield;
-                }
+                return mbresult?.Yield;
             }
             return null;
         }
@@ -238,7 +236,14 @@ namespace MarBasGleaner.BrokerAPI
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                 {
-                    _logger.LogError("Call to {uri} returned {errCode} ({reason})", resp.RequestMessage?.RequestUri?.ToString() ?? "unknown", resp.StatusCode, resp.ReasonPhrase);
+                    var body = string.Empty;
+                    try
+                    {
+                        body = resp.Content.ReadAsStringAsync().Result;
+                    }
+                    catch (Exception) { }
+                    _logger.LogError("Call to {uri} returned {errCode} ({reason}{body})", resp.RequestMessage?.RequestUri?.ToString() ?? "unknown"
+                        , resp.StatusCode, resp.ReasonPhrase, string.IsNullOrEmpty(body) ? string.Empty : $": {body}");
                 }
                 return true;
             }

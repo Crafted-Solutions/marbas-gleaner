@@ -5,6 +5,7 @@ using MarBasSchema.Transport;
 using MarBasSchema.IO;
 using MarBasCommon.Json;
 using MarBasSchema.Broker;
+using System.Text.Encodings.Web;
 
 namespace MarBasGleaner.Json
 {
@@ -21,6 +22,7 @@ namespace MarBasGleaner.Json
                 {
                     var result = new JsonSerializerOptions(JsonSerializerOptions.Default)
                     {
+                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                         //DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull | JsonIgnoreCondition.WhenWritingDefault,

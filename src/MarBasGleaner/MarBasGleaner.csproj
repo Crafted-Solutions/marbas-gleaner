@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <PackageReference Include="DiffPlex" Version="1.7.2" />
-    <PackageReference Include="MarBasSchema" Version="0.1.15" />
+    <PackageReference Include="MarBasSchema" Version="0.1.15.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
