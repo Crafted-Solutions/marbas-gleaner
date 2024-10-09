@@ -41,7 +41,7 @@ namespace MarBasGleaner.Commands
 
                 using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
 
-                var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, ctoken);
+                var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;

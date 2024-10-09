@@ -55,6 +55,14 @@
         "DOTNET_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true
+    },
+    "mbglean-info": {
+      "commandName": "Project",
+      "commandLineArgs": "info -d ../../test/tmp/snapshot -c",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json"
