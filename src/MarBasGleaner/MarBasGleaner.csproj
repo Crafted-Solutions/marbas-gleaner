@@ -53,6 +53,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>GenericCmdL10n.resx</DependentUpon>
     </Compile>
+    <Compile Update="Commands\InfoCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InfoCmdL10n.resx</DependentUpon>
+    </Compile>
     <Compile Update="Commands\PullCmdL10n.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -92,6 +97,10 @@
     <EmbeddedResource Update="Commands\GenericCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>GenericCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\InfoCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>InfoCmdL10n.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Commands\PullCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>

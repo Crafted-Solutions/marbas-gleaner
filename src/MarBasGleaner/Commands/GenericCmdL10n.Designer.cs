@@ -115,6 +115,15 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Broker instance ID {0:D} doesn&apos;t match snapshot source {1:D}.
+        /// </summary>
+        internal static string ErrorInstanceId {
+            get {
+                return ResourceManager.GetString("ErrorInstanceId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; contains no tracking snapshots.
         /// </summary>
         internal static string ErrorReadyState {

@@ -64,6 +64,18 @@ Options:
   --adopt-checkpoint <adopt-checkpoint>  Adopt specified checkpoint (-1 for latest) as current one for this connection [default: 0]
 ```
 
+#### mbglean info
+```
+Displays general information about a snapshot
+
+Usage:
+  mbglean info [options]
+
+Options:
+  -d, --directory <directory>  Local directory containing tracking information [default: .]
+  -c, --validate-connection    Validate connection and compatibility to MarBas broker
+```
+
 #### mbglean status
 ```
 Shows status of MarBas grains in a tracking snapshot

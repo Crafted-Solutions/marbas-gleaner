@@ -29,6 +29,7 @@ namespace MarBasGleaner
                     .UseCommandHandler<TrackCmd, TrackCmd.Worker>()
                     .UseCommandHandler<ConnectCmd, ConnectCmd.Worker>()
                     .UseCommandHandler<StatusCmd, StatusCmd.Worker>()
+                    .UseCommandHandler<InfoCmd, InfoCmd.Worker>()
                     .UseCommandHandler<DiffCmd, DiffCmd.Worker>()
                     .UseCommandHandler<PullCmd, PullCmd.Worker>()
                     .UseCommandHandler<PushCmd, PushCmd.Worker>();
@@ -44,6 +45,7 @@ namespace MarBasGleaner
             rootCmd.AddCommand(new TrackCmd());
             rootCmd.AddCommand(new ConnectCmd());
             rootCmd.AddCommand(new StatusCmd());
+            rootCmd.AddCommand(new InfoCmd());
             rootCmd.AddCommand(new DiffCmd());
             rootCmd.AddCommand(new PullCmd());
             rootCmd.AddCommand(new PushCmd());

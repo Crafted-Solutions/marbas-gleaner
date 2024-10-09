@@ -53,7 +53,7 @@ namespace MarBasGleaner.Commands
 
             public abstract Task<int> InvokeAsync(InvocationContext context);
 
-            protected async Task<ConnectionCheckResult> ValidateBrokerConnection(IBrokerClient client, Version? snapshotVersion = null, CancellationToken cancellationToken = default)
+            protected async Task<ConnectionCheckResult> ValidateBrokerConnection(IBrokerClient client, Version? snapshotVersion = null, Guid? instanceId = null, CancellationToken cancellationToken = default)
             {
                 var result = new ConnectionCheckResult
                 {
@@ -74,6 +74,10 @@ namespace MarBasGleaner.Commands
                     else if (null != snapshotVersion && result.Info.SchemaVersion != snapshotVersion)
                     {
                         ReportError(result.Code = CmdResultCode.SchemaVersionError, string.Format(GenericCmdL10n.ErrorSchemaVersion, result.Info.SchemaVersion, snapshotVersion));
+                    }
+                    else if (null != instanceId && result.Info.InstanceId != instanceId)
+                    {
+                        ReportError(result.Code = CmdResultCode.InstanceIdError, string.Format(GenericCmdL10n.ErrorInstanceId, result.Info.InstanceId, instanceId));
                     }
                 }
                 catch (Exception e)
