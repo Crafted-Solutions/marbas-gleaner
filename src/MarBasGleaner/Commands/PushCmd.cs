@@ -1,13 +1,14 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
 using MarBasGleaner.Tracking;
-using MarBasSchema.Grain;
 using MarBasSchema.Transport;
 
 namespace MarBasGleaner.Commands
 {
     internal class PushCmd : GenericCmd
     {
+        public static readonly Option<int> CheckpointOption = new(new[] { "-c", "--starting-checkpoint" }, () => -1, PushCmdL10n.StartingCheckpointOptionDesc);
+        public static readonly Option<DuplicatesHandlingStrategy> StrategyOption = new(new[] { "-s", "--strategy" }, () => DuplicatesHandlingStrategy.OverwriteSkipNewer, PushCmdL10n.StrategyOptionDesc);
 
         public PushCmd()
             : base("push", PushCmdL10n.CmdDesc)
@@ -15,18 +16,27 @@ namespace MarBasGleaner.Commands
             Setup();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<int>(new[] { "-c", "--starting-checkpoint" }, () => -1, PushCmdL10n.StartingCheckpointOptionDesc));
-            AddOption(new Option<DuplicatesHandlingStrategy>(new[] { "-s", "--strategy" }, () => DuplicatesHandlingStrategy.OverwriteSkipNewer, PushCmdL10n.StrategyOptionDesc));
+            AddOption(CheckpointOption);
+            AddOption(StrategyOption);
         }
 
-        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker: GenericCmd.Worker
         {
             public int StartingCheckpoint { get; set; } = -1;
             public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
+
+            public Worker(ITrackingService trackingService, ILogger<Worker> logger)
+                : this(trackingService, (ILogger)logger)
+            {
+            }
+
+            internal Worker(ITrackingService trackingService, ILogger logger)
+                : base(trackingService, logger)
+            {
+            }
 
             public async override Task<int> InvokeAsync(InvocationContext context)
             {
@@ -84,7 +94,7 @@ namespace MarBasGleaner.Commands
                     DisplayMessage(PushCmdL10n.StatusQueueStore);
                     foreach (var g in grainsToStore)
                     {
-                        DisplayMessage($"{g.Id:D} ({g.Path ?? "\\"}");
+                        DisplayMessage($"{g.Id:D} ({g.Path ?? "\\"})");
                     }
                 }
                 if (0 < grainsToDelete.Count)

@@ -20,7 +20,7 @@ namespace MarBasGleaner.Commands
             AddOption(new Option<bool>(new[] { "-c", "--validate-connection" }, InfoCmdL10n.ValidateConnectionDesc));
         }
 
-        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
             public bool ValidateConnection { get; set; } = false;
 

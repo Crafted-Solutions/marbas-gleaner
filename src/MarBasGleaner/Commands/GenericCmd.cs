@@ -9,7 +9,7 @@ namespace MarBasGleaner.Commands
     internal abstract class GenericCmd : Command
     {
         public static readonly string SeparatorLine = new('-', 50);
-        public static readonly Option<string> DirectoryOpion = new(new[] { "--directory", "-d" }, () => SnapshotDirectory.DefaultPath, GenericCmdL10n.DirectoryOpionDesc);
+        public static readonly Option<string> DirectoryOption = new(new[] { "--directory", "-d" }, () => SnapshotDirectory.DefaultPath, GenericCmdL10n.DirectoryOpionDesc);
 
         [Flags]
         public enum MessageSeparatorOption
@@ -24,7 +24,7 @@ namespace MarBasGleaner.Commands
 
         protected virtual void Setup()
         {
-            Add(DirectoryOpion);
+            Add(DirectoryOption);
         }
 
         public abstract class Worker : ICommandHandler

@@ -22,7 +22,7 @@ namespace MarBasGleaner.Commands
             AddOption(new Option<bool>("--assume-reset", StatusCmdL10n.AssumeResetOptionDesc));
         }
 
-        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
 
             public bool ShowAll { get; set; }

@@ -130,6 +130,21 @@ Options:
   -s, --strategy <Ignore|Merge|MergeSkipNewer|Overwrite|OverwriteRecursive|OverwriteSkipNewer>  Strategy for handling grains existing on both sides - in the snapshot and broker [default: OverwriteSkipNewer]
 ```
 
+#### mbglean sync
+```
+Pushes new and modified Grains from snapshot to MarBas broker and - if successful - pulls most recent changes back into snapshot
+
+Usage:
+  mbglean sync [options]
+
+Options:
+  -d, --directory <directory>                                                                   Local directory containing tracking information [default: .]
+  -c, --starting-checkpoint <starting-checkpoint>                                               Checkpoint number to start operation with, -1 for latest [default: -1]
+  -s, --strategy <Ignore|Merge|MergeSkipNewer|Overwrite|OverwriteRecursive|OverwriteSkipNewer>  Strategy for pushing grains that exist on both sides - in the snapshot and broker [default: OverwriteSkipNewer]
+  -o, --overwrite                                                                               Always overwrite grains even newer ones when pulling into snapshot
+  --force-checkpoint                                                                            Create new checkpoint even when it's safe using latest existing one
+```
+
 ## Using NuGet Packages
 1. Generate your GitHub personal access token [here](https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fsettings%2Ftokens) with **read:packages** permission.
 1. Add https://nuget.pkg.github.com/Crafted-Solutions/index.json repository to your **local** `nuget.config`:

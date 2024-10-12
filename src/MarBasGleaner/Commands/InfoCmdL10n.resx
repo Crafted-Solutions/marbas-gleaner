@@ -124,7 +124,7 @@
     <value>unchecked</value>
   </data>
   <data name="InfoActiveCheckpoint" xml:space="preserve">
-    <value>Active checkpoint:     {0:D4} ({1})</value>
+    <value>Active checkpoint:     {0:D8} ({1})</value>
   </data>
   <data name="InfoAnchor" xml:space="preserve">
     <value>Ancor Grain:       {0:D} ({1})</value>
@@ -154,16 +154,16 @@
     <value>Number of checkpoints: {0}</value>
   </data>
   <data name="InfoPushedCheckpoint" xml:space="preserve">
-    <value>Pushed checkpoint:     {0:D4}</value>
+    <value>Pushed checkpoint:     {0:D8}</value>
   </data>
   <data name="InfoShanshotSchemaVersion" xml:space="preserve">
     <value>Schema version:    {0}</value>
   </data>
   <data name="InfoSharedCheckpoint" xml:space="preserve">
-    <value>Shared checkpoint:     {0:D4} ({1})</value>
+    <value>Shared checkpoint:     {0:D8} ({1})</value>
   </data>
   <data name="InfoSnapshotCheckpoint" xml:space="preserve">
-    <value>Source checkpoint: {0:D4}</value>
+    <value>Source checkpoint: {0:D8}</value>
   </data>
   <data name="InfoSnapshotScope" xml:space="preserve">
     <value>Scope:             {0}</value>

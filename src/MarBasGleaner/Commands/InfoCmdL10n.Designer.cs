@@ -79,7 +79,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Active checkpoint:     {0:D4} ({1}).
+        ///   Looks up a localized string similar to Active checkpoint:     {0:D8} ({1}).
         /// </summary>
         internal static string InfoActiveCheckpoint {
             get {
@@ -169,7 +169,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pushed checkpoint:     {0:D4}.
+        ///   Looks up a localized string similar to Pushed checkpoint:     {0:D8}.
         /// </summary>
         internal static string InfoPushedCheckpoint {
             get {
@@ -187,7 +187,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Shared checkpoint:     {0:D4} ({1}).
+        ///   Looks up a localized string similar to Shared checkpoint:     {0:D8} ({1}).
         /// </summary>
         internal static string InfoSharedCheckpoint {
             get {
@@ -196,7 +196,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Source checkpoint: {0:D4}.
+        ///   Looks up a localized string similar to Source checkpoint: {0:D8}.
         /// </summary>
         internal static string InfoSnapshotCheckpoint {
             get {

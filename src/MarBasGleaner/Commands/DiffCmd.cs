@@ -80,7 +80,7 @@ namespace MarBasGleaner.Commands
             Console.ResetColor();
         }
 
-        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) :
+        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) :
             GenericCmd.Worker(trackingService, (ILogger)logger)
         {
             public IEnumerable<Guid> GrainIds { get; set; } = Enumerable.Empty<Guid>();
