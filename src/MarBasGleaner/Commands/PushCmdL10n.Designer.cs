@@ -142,7 +142,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Strategy for handling grains existing on both sides - in the snapshot and broker.
+        ///   Looks up a localized string similar to Strategy for pushing grains that exist on both sides - in the snapshot and broker.
         /// </summary>
         internal static string StrategyOptionDesc {
             get {

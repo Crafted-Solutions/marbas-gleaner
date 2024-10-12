@@ -32,7 +32,8 @@ namespace MarBasGleaner
                     .UseCommandHandler<InfoCmd, InfoCmd.Worker>()
                     .UseCommandHandler<DiffCmd, DiffCmd.Worker>()
                     .UseCommandHandler<PullCmd, PullCmd.Worker>()
-                    .UseCommandHandler<PushCmd, PushCmd.Worker>();
+                    .UseCommandHandler<PushCmd, PushCmd.Worker>()
+                    .UseCommandHandler<SyncCmd, SyncCmd.Worker>();
 
             }).UseDefaults().Build();
 
@@ -49,6 +50,7 @@ namespace MarBasGleaner
             rootCmd.AddCommand(new DiffCmd());
             rootCmd.AddCommand(new PullCmd());
             rootCmd.AddCommand(new PushCmd());
+            rootCmd.AddCommand(new SyncCmd());
             return new CommandLineBuilder(rootCmd);
         }
     }

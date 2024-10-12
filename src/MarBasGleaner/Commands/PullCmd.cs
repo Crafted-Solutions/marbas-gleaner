@@ -8,24 +8,36 @@ namespace MarBasGleaner.Commands
 {
     internal class PullCmd: GenericCmd
     {
+        public static readonly Option<bool> OverwriteOption = new(new[] { "-o", "--overwrite" }, PullCmdL10n.OverwriteOptionDesc);
+        public static readonly Option<bool> ForceCheckpointOption = new("--force-checkpoint", PullCmdL10n.ForceCheckpointOptionDesc);
+
         public PullCmd()
             : base("pull", PullCmdL10n.CmdDesc)
         {
             Setup();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<bool>(new[] { "-o", "--overwrite" }, PullCmdL10n.OverwriteOptionDesc));
-            AddOption(new Option<bool>("--force-checkpoint", PullCmdL10n.ForceCheckpointOptionDesc));
+            AddOption(OverwriteOption);
+            AddOption(ForceCheckpointOption);
         }
 
-        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker : GenericCmd.Worker
         {
             public bool Overwrite { get; set; }
             public bool ForceCheckpoint { get; set; }
+
+            public Worker(ITrackingService trackingService, ILogger<Worker> logger)
+                : this(trackingService, (ILogger)logger)
+            {
+            }
+
+            internal Worker(ITrackingService trackingService, ILogger logger)
+                : base(trackingService, logger)
+            {
+            }
 
             public override async Task<int> InvokeAsync(InvocationContext context)
             {
@@ -147,7 +159,10 @@ namespace MarBasGleaner.Commands
                     {
                         snapshotDir.LastPushCheckpoint = targetCheckpoint.Ordinal;
                     }
-
+                    if (isSafeCheckpoint)
+                    {
+                        targetCheckpoint.InstanceId = (Guid)snapshotDir.BrokerInstanceId!;
+                    }
                     await snapshotDir.StoreCheckpoint(targetCheckpoint, true, ctoken);
                     await snapshotDir.StoreMetadata(false, ctoken);
 

@@ -31,9 +31,9 @@
 
   <ItemGroup>
     <PackageReference Include="DiffPlex" Version="1.7.2" />
-    <PackageReference Include="MarBasSchema" Version="0.1.15.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="MarBasSchema" Version="0.1.15.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
   </ItemGroup>
 
@@ -72,6 +72,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>StatusCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\SyncCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SyncCmdL10n.resx</DependentUpon>
     </Compile>
     <Compile Update="Commands\TrackCmdL10n.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -113,6 +118,10 @@
     <EmbeddedResource Update="Commands\StatusCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>StatusCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\SyncCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>SyncCmdL10n.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Commands\TrackCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>

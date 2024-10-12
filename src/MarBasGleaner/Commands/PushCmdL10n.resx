@@ -145,7 +145,7 @@
     <value>Grains queued for submission:</value>
   </data>
   <data name="StrategyOptionDesc" xml:space="preserve">
-    <value>Strategy for handling grains existing on both sides - in the snapshot and broker</value>
+    <value>Strategy for pushing grains that exist on both sides - in the snapshot and broker</value>
   </data>
   <data name="WarnCmdResult" xml:space="preserve">
     <value>Stored {0} / deleted {1} grains in {2} with warnings / errors</value>

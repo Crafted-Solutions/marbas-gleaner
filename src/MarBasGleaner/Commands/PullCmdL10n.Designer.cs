@@ -124,7 +124,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Always overwrite grains in snapshot even newer ones.
+        ///   Looks up a localized string similar to Always overwrite grains even newer ones when pulling into snapshot.
         /// </summary>
         internal static string OverwriteOptionDesc {
             get {
