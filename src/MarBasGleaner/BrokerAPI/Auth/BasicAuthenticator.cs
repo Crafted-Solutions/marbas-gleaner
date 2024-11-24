@@ -18,7 +18,7 @@ namespace MarBasGleaner.BrokerAPI.Auth
             var authIsStored = !string.IsNullOrEmpty(auth);
             if (!authIsStored)
             {
-                Console.WriteLine("Enter user name: ");
+                Console.Write($"Enter user name: {Environment.NewLine}");
                 var user = Console.ReadLine();
                 if (!string.IsNullOrEmpty(user))
                 {
@@ -48,7 +48,7 @@ namespace MarBasGleaner.BrokerAPI.Auth
 
         private static SecureString GetPassword()
         {
-            Console.WriteLine("Enter password: ");
+            Console.Write($"Enter password: {Environment.NewLine}");
             var result = new SecureString();
             while (true)
             {

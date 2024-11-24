@@ -23,6 +23,54 @@
         "DOTNET_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true
+    },
+    "mbglean-pull": {
+      "commandName": "Project",
+      "commandLineArgs": "pull -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-pull-ckeckpoint": {
+      "commandName": "Project",
+      "commandLineArgs": "pull -d ../../test/tmp/snapshot --force-checkpoint",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-diff": {
+      "commandName": "Project",
+      "commandLineArgs": "diff 00000000-0000-1000-a000-000000000001 -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-push": {
+      "commandName": "Project",
+      "commandLineArgs": "push -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-info": {
+      "commandName": "Project",
+      "commandLineArgs": "info -d ../../test/tmp/snapshot -c",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-sync": {
+      "commandName": "Project",
+      "commandLineArgs": "sync -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json"

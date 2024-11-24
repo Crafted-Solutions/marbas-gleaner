@@ -4,6 +4,8 @@ using MarBasSchema;
 using MarBasSchema.Transport;
 using MarBasSchema.IO;
 using MarBasCommon.Json;
+using MarBasSchema.Broker;
+using System.Text.Encodings.Web;
 
 namespace MarBasGleaner.Json
 {
@@ -20,6 +22,7 @@ namespace MarBasGleaner.Json
                 {
                     var result = new JsonSerializerOptions(JsonSerializerOptions.Default)
                     {
+                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                         //DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull | JsonIgnoreCondition.WhenWritingDefault,
@@ -44,6 +47,7 @@ namespace MarBasGleaner.Json
                     result.Converters.Add(new InterfaceJsonConverter<IAclEntryTransportable, AclEntryTransportable>());
                     result.Converters.Add(new InterfaceJsonConverter<IGrainLocalizedLayer, GrainLocalizedLayer>());
                     result.Converters.Add(new InterfaceJsonConverter<IStreamableContent, StreamableContent>());
+                    result.Converters.Add(new InterfaceJsonConverter<IBrokerOperationFeedback, BrokerOperationFeedback>());
                     options = Interlocked.CompareExchange(ref _deserializationOptions, result, null) ?? result;
                 }
                 return options;

@@ -5,9 +5,15 @@
         Success = 0,
         ParameterError = -2,
         SnapshotStateError = -1,
-        BrokerConnectionError = 1,
-        SchemaVersionError = 2,
-        AnchorGrainError = 3,
-        SnapshotInitError = 4
+        SnapshotVersionError = 1,
+        BrokerConnectionError,
+        SchemaVersionError,
+        APIVersionError,
+        InstanceIdError,
+        AnchorGrainError,
+        SnapshotInitError,
+        GrainLoadError,
+        BrokerPushError,
+        SnapshotStatusOutofdate = 42
     }
 }

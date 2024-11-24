@@ -9,7 +9,7 @@ namespace MarBasGleaner.Commands
     internal class ConnectCmd: GenericCmd
     {
         public ConnectCmd()
-            : base("connect", "Connects a tracking snapshot with MarBas broker instance")
+            : base("connect", ConnectCmdL10n.CmdDesc)
         {
             Setup();
         }
@@ -20,56 +20,49 @@ namespace MarBasGleaner.Commands
             Setup();
         }
 
-        protected virtual void Setup()
+        protected override void Setup()
         {
-            AddArgument(new Argument<Uri>("url", "Broker URL"));
-            AddOption(DirectoryOpion);
-            AddOption(new Option<string>("--auth", () => BasicAuthenticator.SchemeName, "Authentication type to use with MarBas broker connection"));
+            AddArgument(new Argument<Uri>("url", ConnectCmdL10n.URLArgDesc));
+            base.Setup();
+            AddOption(new Option<string>("--auth", () => BasicAuthenticator.SchemeName, ConnectCmdL10n.AuthOptionDesc));
+            AddOption(new Option<int>("--adopt-checkpoint", () => 0, ConnectCmdL10n.AdoptCheckpointOptionDesc));
         }
 
-        public class Worker : ICommandHandler
+        public new class Worker : GenericCmd.Worker
         {
-            protected readonly ILogger _logger;
-            protected readonly ITrackingService _trackingService;
-
             public Worker(ITrackingService trackingService, ILogger<Worker> logger)
+                : base(trackingService, (ILogger)logger)
             {
-                _logger = logger;
-                _trackingService = trackingService;
+
             }
 
             protected Worker(ITrackingService trackingService, ILogger logger)
+                : base(trackingService, logger)
             {
-                _logger = logger;
-                _trackingService = trackingService;
             }
 
             public Uri? Url { get; set; }
             public string Auth { get; set; } = BasicAuthenticator.SchemeName;
-            public string Directory { get; set; } = SnapshotDirectory.DefaultPath;
+            public int AdoptCheckpoint { get; set; } = 0;
+ 
 
-
-            public int Invoke(InvocationContext context)
-            {
-                return InvokeAsync(context).Result;
-            }
-
-            public virtual async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(InvocationContext context)
             {
                 if (null == Url || !Url.IsAbsoluteUri)
                 {
-                    return ReportError(CmdResultCode.ParameterError, $"'{Url}' is not a recognizable absolute URI");
+                    return ReportError(CmdResultCode.ParameterError, string.Format(ConnectCmdL10n.ErrorURL, Url));
                 }
                 var ctoken = context.GetCancellationToken();
 
                 var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken: ctoken);
-                if (!snapshotDir.IsDirectory || !snapshotDir.IsSnapshot)
+                var result = ValidateSnapshot(snapshotDir, false);
+                if (0 != result)
                 {
-                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.FullPath}' contains no tracking snapshots");
+                    return result;
                 }
                 if (snapshotDir.IsConnected)
                 {
-                    return ReportError(CmdResultCode.SnapshotStateError, $"'{snapshotDir.IsConnected}' is already tracking '{snapshotDir.ConnectionSettings?.BrokerUrl}'");
+                    return ReportError(CmdResultCode.SnapshotStateError, String.Format(ConnectCmdL10n.ErrorConnectionState, snapshotDir.FullPath, snapshotDir.ConnectionSettings?.BrokerUrl));
                 }
 
                 if (_logger.IsEnabled(LogLevel.Debug))
@@ -77,14 +70,13 @@ namespace MarBasGleaner.Commands
                     _logger.LogDebug("ConnectCmd: SnapshotDirectory={fullPath}, Url={url}", snapshotDir.FullPath, Url);
                 }
 
-                Console.WriteLine("Connecting {0} with snapshot {1}", Url, snapshotDir.FullPath);
-                Console.WriteLine(SeparatorLine);
+                DisplayMessage(string.Format(ConnectCmdL10n.MsgCmdStart, Url, snapshotDir.FullPath), MessageSeparatorOption.After);
 
                 Guid instanceId = Guid.Empty;
                 var connection = CreateConnectionSettings();
                 using (var client = _trackingService.GetBrokerClient(connection))
                 {
-                    var brokerStat = await CheckBrokerConnection(client, snapshotDir.SharedSnapshot?.SchemaVersion, ctoken);
+                    var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                     if (CmdResultCode.Success != brokerStat.Code)
                     {
                         return (int)brokerStat.Code;
@@ -97,7 +89,8 @@ namespace MarBasGleaner.Commands
 
                 try
                 {
-                    await snapshotDir.Connect(connection, instanceId, cancellationToken: ctoken);
+                    await snapshotDir.Connect(connection, instanceId, AdoptCheckpoint, cancellationToken: ctoken);
+                    DisplayInfo(string.Format(ConnectCmdL10n.MsgCmdSuccess, Url));
                 }
                 catch (Exception e)
                 {
@@ -105,11 +98,11 @@ namespace MarBasGleaner.Commands
                     {
                         _logger.LogError(e, "Snapshot connect error");
                     }
-                    snapshotDir.CleanUp();
-                    return ReportError(CmdResultCode.SnapshotInitError, $"Error connecting snapshot '{snapshotDir.FullPath}' with {Url}: {e.Message}");
+                    snapshotDir.Disconnect();
+                    return ReportError(CmdResultCode.SnapshotInitError, string.Format(ConnectCmdL10n.ErrorConnectException, snapshotDir.FullPath, Url, e.Message));
                 }
 
-                return 0;
+                return result;
             }
 
             protected ConnectionSettings CreateConnectionSettings()
