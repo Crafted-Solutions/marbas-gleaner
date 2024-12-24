@@ -135,6 +135,9 @@
   <data name="ErrorURL" xml:space="preserve">
     <value>'{0}' is not a recognizable absolute URI</value>
   </data>
+  <data name="IgnoreSslErrorsOptionDesc" xml:space="preserve">
+    <value>Ignore SSL errors, specifically trust all (self-signed) certificates</value>
+  </data>
   <data name="MsgCmdStart" xml:space="preserve">
     <value>Connecting {0} with snapshot {1}</value>
   </data>

@@ -3,15 +3,20 @@ using MarBasGleaner.BrokerAPI.Auth;
 
 namespace MarBasGleaner.Tracking
 {
-    internal sealed class TrackingService(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider) : ITrackingService
+    internal sealed class TrackingService(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider, IHostEnvironment environment) : ITrackingService
     {
-        private readonly Dictionary<string, SnapshotDirectory> _snapshots = new();
+        private readonly Dictionary<string, SnapshotDirectory> _snapshots = [];
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly IServiceProvider _services = serviceProvider;
+        private readonly IHostEnvironment _environment = environment;
 
         public IBrokerClient GetBrokerClient(ConnectionSettings settings, bool storeCredentials = true)
         {
-            var result = _httpClientFactory.CreateClient();
+            if (settings.IgnoreSslErrors && !_environment.IsDevelopment())
+            {
+                throw new NotSupportedException("Lax SSL handling (IgnoreSslErrors) is only supproted in development environment");
+            }
+            var result = settings.IgnoreSslErrors ? _httpClientFactory.CreateClient("lax-ssl-client") : _httpClientFactory.CreateClient();
             result.BaseAddress = settings.BrokerUrl;
             var authenticator = AuthenticatorFactory.CreateAuthenticator(settings);
             authenticator?.Authenticate(result, settings, storeCredentials);

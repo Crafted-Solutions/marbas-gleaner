@@ -71,6 +71,14 @@
         "DOTNET_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true
+    },
+    "mbglean-connect-lax": {
+      "commandName": "Project",
+      "commandLineArgs": "connect https://localhost:7277 -d ../../test/tmp/snapshot --ignore-ssl-errors",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json"

@@ -9,6 +9,7 @@ namespace MarBasGleaner.BrokerAPI
         public static readonly Version MinimumAPIVersion = new(0, 1, 15);
 
         public required Uri BrokerUrl { get; set; }
+        public bool IgnoreSslErrors { get; set; } = false;
         public string Authenticator
         {
             get => AuthenticatorType.FullName!;

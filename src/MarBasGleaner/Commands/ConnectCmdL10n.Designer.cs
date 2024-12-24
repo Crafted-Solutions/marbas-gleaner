@@ -115,6 +115,15 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore SSL errors, specifically trust all (self-signed) certificates.
+        /// </summary>
+        internal static string IgnoreSslErrorsOptionDesc {
+            get {
+                return ResourceManager.GetString("IgnoreSslErrorsOptionDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Connecting {0} with snapshot {1}.
         /// </summary>
         internal static string MsgCmdStart {
