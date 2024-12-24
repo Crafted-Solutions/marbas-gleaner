@@ -26,6 +26,7 @@ namespace MarBasGleaner.Commands
             base.Setup();
             AddOption(new Option<string>("--auth", () => BasicAuthenticator.SchemeName, ConnectCmdL10n.AuthOptionDesc));
             AddOption(new Option<int>("--adopt-checkpoint", () => 0, ConnectCmdL10n.AdoptCheckpointOptionDesc));
+            AddOption(new Option<bool>("--ignore-ssl-errors", () => false, ConnectCmdL10n.IgnoreSslErrorsOptionDesc));
         }
 
         public new class Worker : GenericCmd.Worker
@@ -44,6 +45,7 @@ namespace MarBasGleaner.Commands
             public Uri? Url { get; set; }
             public string Auth { get; set; } = BasicAuthenticator.SchemeName;
             public int AdoptCheckpoint { get; set; } = 0;
+            public bool IgnoreSslErrors { get; set; } = false;
  
 
             public override async Task<int> InvokeAsync(InvocationContext context)
@@ -110,7 +112,8 @@ namespace MarBasGleaner.Commands
                 return new ConnectionSettings
                 {
                     BrokerUrl = Url!,
-                    AuthenticatorType = AuthenticatorFactory.ResolveAuthenticatorType(Auth) ?? typeof(BasicAuthenticator)
+                    AuthenticatorType = AuthenticatorFactory.ResolveAuthenticatorType(Auth) ?? typeof(BasicAuthenticator),
+                    IgnoreSslErrors = IgnoreSslErrors
                 };
             }
         }

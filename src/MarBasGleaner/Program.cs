@@ -19,12 +19,20 @@ namespace MarBasGleaner
                         config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
                     })
                     .ConfigureDefaults(null)
-                    .ConfigureServices((_, services) =>
+                    .ConfigureServices((ctx, services) =>
                     {
                         services
                             .AddOptions()
                             .AddHttpClient()
                             .AddSingleton<ITrackingService, TrackingService>();
+
+                        if (ctx.HostingEnvironment.IsDevelopment() && ctx.Configuration.GetValue<bool>("HttpClient:UseLaxSSLHandler"))
+                        {
+                            services.AddHttpClient("lax-ssl-client").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+                            {
+                                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                            });
+                        }
                     })
                     .UseCommandHandler<TrackCmd, TrackCmd.Worker>()
                     .UseCommandHandler<ConnectCmd, ConnectCmd.Worker>()
