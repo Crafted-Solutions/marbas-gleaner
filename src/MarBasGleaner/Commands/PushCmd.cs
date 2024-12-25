@@ -64,6 +64,10 @@ namespace MarBasGleaner.Commands
                 {
                     snapshotDir.LastPushCheckpoint = StartingCheckpoint;
                 }
+                else if (snapshotDir.LastPushHasErrors)
+                {
+                    --snapshotDir.LastPushCheckpoint;
+                }
                 if (isSafeCheckpoint && snapshotDir.LastPushCheckpoint == snapshotDir.SharedCheckpoint!.Ordinal)
                 {
                     DisplayInfo(string.Format(PushCmdL10n.MsgCmdSuccessNoop, snapshotDir.LastPushCheckpoint));
@@ -106,6 +110,7 @@ namespace MarBasGleaner.Commands
                     }
                 }
 
+                var hasErrors = false;
                 try
                 {
                     var importResult = await client.PushGrains(grainsToStore, grainsToDelete, Strategy, ctoken);
@@ -127,6 +132,10 @@ namespace MarBasGleaner.Commands
                     {
                         foreach (var feedback in importResult.Feedback)
                         {
+                            if (LogLevel.Warning < feedback.FeedbackType)
+                            {
+                                hasErrors = true;
+                            }
                             if (_logger.IsEnabled(feedback.FeedbackType))
                             {
                                 _logger.Log(feedback.FeedbackType, "Import feedback on {object}: {message} ({code})", feedback.ObjectId?.ToString("D") ?? "unspecified", feedback.Message, feedback.Code);
@@ -144,6 +153,7 @@ namespace MarBasGleaner.Commands
                 }
 
                 snapshotDir.LastPushCheckpoint = conflated.Ordinal;
+                snapshotDir.LastPushHasErrors = hasErrors;
                 if (!isSafeCheckpoint && 0 == snapshotDir.LocalCheckpoint.Ordinal)
                 {
                     await snapshotDir.AdoptCheckpoint(cancellationToken: ctoken);
