@@ -121,7 +121,7 @@
     <value>Authentication type to use with MarBas broker connection</value>
   </data>
   <data name="IgnoreSslErrorsOptionDesc" xml:space="preserve">
-    <value>Ignore SSL errors, specifically trust all (self-signed) certificates</value>
+    <value>Ignore SSL errors, specifically trust all (self-signed) certificates, only supported if DOTNET_ENVIRONMENT=Development is set</value>
   </data>
   <data name="URLArgDesc" xml:space="preserve">
     <value>Broker URL</value>

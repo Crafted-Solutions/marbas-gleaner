@@ -70,7 +70,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ignore SSL errors, specifically trust all (self-signed) certificates.
+        ///   Looks up a localized string similar to Ignore SSL errors, specifically trust all (self-signed) certificates, only supported if DOTNET_ENVIRONMENT=Development is set.
         /// </summary>
         internal static string IgnoreSslErrorsOptionDesc {
             get {

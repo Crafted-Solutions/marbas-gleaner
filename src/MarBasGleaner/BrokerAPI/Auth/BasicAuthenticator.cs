@@ -29,6 +29,7 @@ namespace MarBasGleaner.BrokerAPI.Auth
                         auth = Convert.ToBase64String(Encoding.Default.GetBytes($"{cred.UserName}:{cred.Password}"));
                     }
                 }
+                Console.Write(Environment.NewLine);
             }
             if (string.IsNullOrEmpty(auth))
             {
