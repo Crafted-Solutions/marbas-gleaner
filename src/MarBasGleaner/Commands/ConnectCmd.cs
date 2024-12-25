@@ -1,51 +1,20 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using MarBasGleaner.BrokerAPI;
-using MarBasGleaner.BrokerAPI.Auth;
 using MarBasGleaner.Tracking;
 
 namespace MarBasGleaner.Commands
 {
-    internal class ConnectCmd: GenericCmd
+    internal sealed class ConnectCmd(): ConnectBaseCmd("connect", ConnectCmdL10n.CmdDesc)
     {
-        public ConnectCmd()
-            : base("connect", ConnectCmdL10n.CmdDesc)
-        {
-            Setup();
-        }
-
-        protected ConnectCmd(string name, string? description = null)
-            :base(name, description)
-        {
-            Setup();
-        }
-
         protected override void Setup()
         {
-            AddArgument(new Argument<Uri>("url", ConnectCmdL10n.URLArgDesc));
             base.Setup();
-            AddOption(new Option<string>("--auth", () => BasicAuthenticator.SchemeName, ConnectCmdL10n.AuthOptionDesc));
             AddOption(new Option<int>("--adopt-checkpoint", () => 0, ConnectCmdL10n.AdoptCheckpointOptionDesc));
-            AddOption(new Option<bool>("--ignore-ssl-errors", () => false, ConnectCmdL10n.IgnoreSslErrorsOptionDesc));
         }
 
-        public new class Worker : GenericCmd.Worker
+        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectBaseCmd.Worker(trackingService, (ILogger)logger)
         {
-            public Worker(ITrackingService trackingService, ILogger<Worker> logger)
-                : base(trackingService, (ILogger)logger)
-            {
-
-            }
-
-            protected Worker(ITrackingService trackingService, ILogger logger)
-                : base(trackingService, logger)
-            {
-            }
-
-            public Uri? Url { get; set; }
-            public string Auth { get; set; } = BasicAuthenticator.SchemeName;
             public int AdoptCheckpoint { get; set; } = 0;
-            public bool IgnoreSslErrors { get; set; } = false;
  
 
             public override async Task<int> InvokeAsync(InvocationContext context)
@@ -105,16 +74,6 @@ namespace MarBasGleaner.Commands
                 }
 
                 return result;
-            }
-
-            protected ConnectionSettings CreateConnectionSettings()
-            {
-                return new ConnectionSettings
-                {
-                    BrokerUrl = Url!,
-                    AuthenticatorType = AuthenticatorFactory.ResolveAuthenticatorType(Auth) ?? typeof(BasicAuthenticator),
-                    IgnoreSslErrors = IgnoreSslErrors
-                };
             }
         }
     }

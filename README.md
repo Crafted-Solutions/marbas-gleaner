@@ -35,12 +35,12 @@ Usage:
 
 Arguments:
   <url>         Broker URL
-  <path-or-id>  Identifier of the top grain to track
+  <path-or-id>  Identifier (GUID) or path (i.e. '/marbas/<path>') of the top grain to track
 
 Options:
   -d, --directory <directory>                                 Local directory containing tracking information [default: .]
   --auth <auth>                                               Authentication type to use with MarBas broker connection [default: Basic]
-  --adopt-checkpoint <adopt-checkpoint>                       Adopt specified checkpoint (-1 for latest) as current one for this connection [default: 0]
+  --ignore-ssl-errors                                         Ignore SSL errors, specifically trust all (self-signed) certificates [default: False]
   -s, --scope <Anchor|Children|Descendants|Family|Recursive>  Tracking scope [default: Recursive]
   -c, --scs <Git|None|Svn|Tfvc>                               Source control system used for snapshots (currently only Git is supported) [default: Git]
   --ignore-grains <ignore-grains>                             List of grain IDs to ignore
@@ -61,6 +61,7 @@ Arguments:
 Options:
   -d, --directory <directory>            Local directory containing tracking information [default: .]
   --auth <auth>                          Authentication type to use with MarBas broker connection [default: Basic]
+  --ignore-ssl-errors                    Ignore SSL errors, specifically trust all (self-signed) certificates [default: False]
   --adopt-checkpoint <adopt-checkpoint>  Adopt specified checkpoint (-1 for latest) as current one for this connection [default: 0]
 ```
 
