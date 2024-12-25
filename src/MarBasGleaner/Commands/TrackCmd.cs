@@ -6,7 +6,7 @@ using MarBasSchema.Broker;
 
 namespace MarBasGleaner.Commands
 {
-    internal sealed class TrackCmd(): ConnectCmd("track", TrackCmdL10n.CmdDesc)
+    internal sealed class TrackCmd(): ConnectBaseCmd("track", TrackCmdL10n.CmdDesc)
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
@@ -32,7 +32,7 @@ namespace MarBasGleaner.Commands
             });
         }
 
-        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectBaseCmd.Worker(trackingService, (ILogger)logger)
         {
             public string? PathOrId { get; set; }
             public SnapshotScope Scope { get; set; } = SnapshotScope.Recursive;

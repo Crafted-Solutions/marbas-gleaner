@@ -5,7 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <UserSecretsId>dotnet-MarBasGleaner-a1530001-ad9c-44ab-ac75-b038cd799a50</UserSecretsId>
     <StartupObject>MarBasGleaner.Program</StartupObject>
     <AssemblyName>mbglean</AssemblyName>
@@ -39,9 +39,14 @@
 
   <ItemGroup>
     <Compile Update="Commands\ConnectCmdL10n.Designer.cs">
+      <DependentUpon>ConnectCmdL10n.resx</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ConnectCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\ConnectBaseCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ConnectBaseCmdL10n.resx</DependentUpon>
     </Compile>
     <Compile Update="Commands\DiffCmdL10n.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -92,8 +97,12 @@
 
   <ItemGroup>
     <EmbeddedResource Update="Commands\ConnectCmdL10n.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ConnectCmdL10n.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\ConnectBaseCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ConnectBaseCmdL10n.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Commands\DiffCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>

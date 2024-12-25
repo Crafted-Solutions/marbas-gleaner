@@ -142,7 +142,7 @@
     <value>'{0}' is not a recognizable absolute URI</value>
   </data>
   <data name="IdArgDesc" xml:space="preserve">
-    <value>Identifier of the top grain to track</value>
+    <value>Identifier (GUID) or path (i.e. '/marbas/&lt;path&gt;') of the top grain to track</value>
   </data>
   <data name="IgnoreGrainsOptionDesc" xml:space="preserve">
     <value>List of grain IDs to ignore</value>
