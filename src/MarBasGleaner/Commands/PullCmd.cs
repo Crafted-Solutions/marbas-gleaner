@@ -109,18 +109,23 @@ namespace MarBasGleaner.Commands
                     }
                 }
 
-                var imports = await client.PullGrains(incoming.Keys, ctoken);
-                foreach (var grain in imports)
+                var pages = (int)Math.Ceiling((decimal)incoming.Count / 100);
+                for (var page = 0; page < pages; page++)
                 {
-                    var import = true;
-                    var (localStatus, brokerStatus) = incoming[grain.Id];
-                    if (GrainTrackingStatus.Modified == brokerStatus && GrainTrackingStatus.Modified == localStatus)
+                    var block = 1 < pages ? incoming.Keys.Skip(page * 100).Take(100) : incoming.Keys;
+                    var imports = await client.PullGrains(block, ctoken);
+                    foreach (var grain in imports)
                     {
-                        import = await ResolveConflict(snapshotDir, grain, targetCheckpoint, ctoken);
-                    }
-                    if (import)
-                    {
-                        await ImportGrain(snapshotDir, grain, brokerStatus, targetCheckpoint, ctoken);
+                        var import = true;
+                        var (localStatus, brokerStatus) = incoming[grain.Id];
+                        if (GrainTrackingStatus.Modified == brokerStatus && GrainTrackingStatus.Modified == localStatus)
+                        {
+                            import = await ResolveConflict(snapshotDir, grain, targetCheckpoint, ctoken);
+                        }
+                        if (import)
+                        {
+                            await ImportGrain(snapshotDir, grain, brokerStatus, targetCheckpoint, ctoken);
+                        }
                     }
                 }
 
@@ -240,6 +245,7 @@ namespace MarBasGleaner.Commands
                 if (GrainTrackingStatus.Deleted == status)
                 {
                     checkpoint.Deletions.Add(grain.Id);
+                    checkpoint.Modifications.Remove(grain.Id);
                 }
                 else
                 {

@@ -154,12 +154,17 @@ namespace MarBasGleaner.Commands
                     return true;
                 }).Select(x => x.Id);
 
-                var grainsImported = await client.PullGrains(filteredIds, ctoken);
-                await Parallel.ForEachAsync(grainsImported, ctoken, async (grain, token) =>
+                var pages = (int)Math.Ceiling((decimal)filteredIds.Count() / 100);
+                for (var page = 0; page < pages; page++)
                 {
-                    DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, grain.Id, grain.Path ?? "/"));
-                    await snapshotDir.StoreGrain(grain, cancellationToken: token);
-                });
+                    var block = 1 < pages ? filteredIds.Skip(page * 100).Take(100) : filteredIds;
+                    var grainsImported = await client.PullGrains(block, ctoken);
+                    await Parallel.ForEachAsync(grainsImported, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ctoken }, async (grain, token) =>
+                    {
+                        DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, grain.Id, grain.Path ?? "/"));
+                        await snapshotDir.StoreGrain(grain, cancellationToken: token);
+                    });
+                }
 
                 snapshotDir.LocalCheckpoint!.Latest = latest;
                 snapshot.Updated = DateTime.UtcNow;
