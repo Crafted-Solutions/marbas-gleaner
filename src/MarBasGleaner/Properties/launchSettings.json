@@ -16,14 +16,6 @@
       },
       "dotnetRunMessages": true
     },
-    "mbglean-status": {
-      "commandName": "Project",
-      "commandLineArgs": "status -d ../../test/tmp/snapshot --show-all",
-      "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Development"
-      },
-      "dotnetRunMessages": true
-    },
     "mbglean-pull": {
       "commandName": "Project",
       "commandLineArgs": "pull -d ../../test/tmp/snapshot",
@@ -75,6 +67,22 @@
     "mbglean-connect-lax": {
       "commandName": "Project",
       "commandLineArgs": "connect https://localhost:7277 -d ../../test/tmp/snapshot --ignore-ssl-errors",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-status-all": {
+      "commandName": "Project",
+      "commandLineArgs": "status -d ../../test/tmp/snapshot --show-all",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-status": {
+      "commandName": "Project",
+      "commandLineArgs": "status -d ../../test/tmp/snapshot",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       },

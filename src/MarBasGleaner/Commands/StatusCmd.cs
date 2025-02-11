@@ -63,18 +63,19 @@ namespace MarBasGleaner.Commands
 
                 var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: ctoken);
                 var additionsToCheck = new Dictionary<Guid, IGrain>();
+                var deletionsToCheck = new Dictionary<Guid, IGrain>();
 
                 await foreach (var grain in snapshotDir.ListGrains<GrainTransportable>(cancellationToken: ctoken))
                 {
                     if (null != grain)
                     {
-                        var status = (GrainTrackingStatus.Uptodate, GrainTrackingStatus.Uptodate);
+                        var status = (snapshot: GrainTrackingStatus.Uptodate, broker: GrainTrackingStatus.Uptodate);
                         if (brokerModHash.TryGetValue(grain.Id, out IGrain? value))
                         {
-                            status.Item2 = GrainTrackingStatus.Modified;
+                            status.broker = GrainTrackingStatus.Modified;
                             if (value.MTime < grain.MTime)
                             {
-                                status.Item1 = GrainTrackingStatus.Modified;
+                                status.snapshot = GrainTrackingStatus.Modified;
                             }
                             brokerModHash.Remove(grain.Id);
                         }
@@ -82,16 +83,16 @@ namespace MarBasGleaner.Commands
                         var pending = false;
                         if (!conflated.Modifications.Contains(grain.Id))
                         {
-                            status.Item1 = snapshotDir.SharedCheckpoint!.Modifications.Contains(grain.Id) ? GrainTrackingStatus.New : GrainTrackingStatus.Obscure;
+                            status.snapshot = snapshotDir.SharedCheckpoint!.Modifications.Contains(grain.Id) ? GrainTrackingStatus.New : GrainTrackingStatus.Obscure;
                         }
                         else if (conflated.Deletions.Contains(grain.Id))
                         {
-                            status.Item1 = GrainTrackingStatus.Obscure;
+                            status.snapshot = GrainTrackingStatus.Obscure;
                         }
-                        else if (GrainTrackingStatus.Uptodate == status.Item1 && GrainTrackingStatus.Uptodate == status.Item2
+                        else if (GrainTrackingStatus.Uptodate == status.snapshot && GrainTrackingStatus.Uptodate == status.broker
                             && grain.MTime > (AssumeReset ? SnapshotCheckpoint.BuiltInGrainsMTime : snapshotDir.LocalCheckpoint.Latest))
                         {
-                            status.Item1 = GrainTrackingStatus.Modified;
+                            status.snapshot = GrainTrackingStatus.Modified;
                             if (AssumeReset || (!isCheckpointInSync && !snapshotDir.LocalCheckpoint.Modifications.Contains(grain.Id)))
                             {
                                 additionsToCheck[grain.Id] = grain;
@@ -99,13 +100,20 @@ namespace MarBasGleaner.Commands
                             }
                         }
 
-                        if (0 == result && GrainTrackingStatus.Uptodate < (status.Item1 | status.Item2))
+                        if (GrainTrackingStatus.Uptodate < (status.snapshot | status.broker))
                         {
-                            result = (int)CmdResultCode.SnapshotStatusOutofdate;
+                            if (0 == result)
+                            {
+                                result = (int)CmdResultCode.SnapshotStatusOutofdate;
+                            }
+                        }
+                        else if (!pending)
+                        {
+                            deletionsToCheck[grain.Id] = grain;
                         }
                         if (!pending)
                         {
-                            PrintGrainInfo(grain, status.Item1, status.Item2);
+                            PrintGrainInfo(grain, status.snapshot, status.broker);
                         }
 
                         conflated.Modifications.Remove(grain.Id);
@@ -119,6 +127,18 @@ namespace MarBasGleaner.Commands
                     foreach (var checkResult in checkResults)
                     {
                         PrintGrainInfo(additionsToCheck[checkResult.Key], checkResult.Value ? GrainTrackingStatus.Modified : GrainTrackingStatus.New);
+                    }
+                }
+
+                if (0 < deletionsToCheck.Count)
+                {
+                    var checkResults = await client.CheckGrainsExist(deletionsToCheck.Keys, ctoken);
+                    foreach (var checkResult in checkResults)
+                    {
+                        if (!checkResult.Value)
+                        {
+                            PrintGrainInfo(deletionsToCheck[checkResult.Key], statusBroker: GrainTrackingStatus.Deleted);
+                        }
                     }
                 }
 
@@ -137,7 +157,8 @@ namespace MarBasGleaner.Commands
                     var grain = await client.GetGrain(id, false, ctoken);
                     if (null == grain)
                     {
-                        PrintGrainInfo(DeletedGrain(id), statusBroker: GrainTrackingStatus.Deleted);
+                        grain = await snapshotDir.LoadGrainById<GrainPlain>(id, cancellationToken: ctoken);
+                        PrintGrainInfo(grain ?? DeletedGrain(id), statusBroker: GrainTrackingStatus.Deleted);
                     }
                     else
                     {
