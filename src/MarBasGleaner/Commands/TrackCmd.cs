@@ -6,7 +6,7 @@ using MarBasSchema.Broker;
 
 namespace MarBasGleaner.Commands
 {
-    internal sealed class TrackCmd(): ConnectCmd("track", TrackCmdL10n.CmdDesc)
+    internal sealed class TrackCmd(): ConnectBaseCmd("track", TrackCmdL10n.CmdDesc)
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
@@ -32,7 +32,7 @@ namespace MarBasGleaner.Commands
             });
         }
 
-        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectBaseCmd.Worker(trackingService, (ILogger)logger)
         {
             public string? PathOrId { get; set; }
             public SnapshotScope Scope { get; set; } = SnapshotScope.Recursive;
@@ -154,12 +154,17 @@ namespace MarBasGleaner.Commands
                     return true;
                 }).Select(x => x.Id);
 
-                var grainsImported = await client.PullGrains(filteredIds, ctoken);
-                await Parallel.ForEachAsync(grainsImported, ctoken, async (grain, token) =>
+                var pages = (int)Math.Ceiling((decimal)filteredIds.Count() / 100);
+                for (var page = 0; page < pages; page++)
                 {
-                    DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, grain.Id, grain.Path ?? "/"));
-                    await snapshotDir.StoreGrain(grain, cancellationToken: token);
-                });
+                    var block = 1 < pages ? filteredIds.Skip(page * 100).Take(100) : filteredIds;
+                    var grainsImported = await client.PullGrains(block, ctoken);
+                    await Parallel.ForEachAsync(grainsImported, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ctoken }, async (grain, token) =>
+                    {
+                        DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, grain.Id, grain.Path ?? "/"));
+                        await snapshotDir.StoreGrain(grain, cancellationToken: token);
+                    });
+                }
 
                 snapshotDir.LocalCheckpoint!.Latest = latest;
                 snapshot.Updated = DateTime.UtcNow;

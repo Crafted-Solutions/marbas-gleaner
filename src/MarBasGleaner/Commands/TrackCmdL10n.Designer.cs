@@ -133,7 +133,7 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Identifier of the top grain to track.
+        ///   Looks up a localized string similar to Identifier (GUID) or path (i.e. &apos;/marbas/&lt;path&gt;&apos;) of the top grain to track.
         /// </summary>
         internal static string IdArgDesc {
             get {

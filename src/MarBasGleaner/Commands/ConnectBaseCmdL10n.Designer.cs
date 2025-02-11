@@ -22,14 +22,14 @@ namespace MarBasGleaner.Commands {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ConnectCmdL10n {
+    internal class ConnectBaseCmdL10n {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ConnectCmdL10n() {
+        internal ConnectBaseCmdL10n() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace MarBasGleaner.Commands {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarBasGleaner.Commands.ConnectCmdL10n", typeof(ConnectCmdL10n).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarBasGleaner.Commands.ConnectBaseCmdL10n", typeof(ConnectBaseCmdL10n).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,65 +61,29 @@ namespace MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adopt specified checkpoint (-1 for latest) as current one for this connection.
+        ///   Looks up a localized string similar to Authentication type to use with MarBas broker connection.
         /// </summary>
-        internal static string AdoptCheckpointOptionDesc {
+        internal static string AuthOptionDesc {
             get {
-                return ResourceManager.GetString("AdoptCheckpointOptionDesc", resourceCulture);
+                return ResourceManager.GetString("AuthOptionDesc", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connects a tracking snapshot with MarBas broker instance.
+        ///   Looks up a localized string similar to Ignore SSL errors, specifically trust all (self-signed) certificates, only supported if DOTNET_ENVIRONMENT=Development is set.
         /// </summary>
-        internal static string CmdDesc {
+        internal static string IgnoreSslErrorsOptionDesc {
             get {
-                return ResourceManager.GetString("CmdDesc", resourceCulture);
+                return ResourceManager.GetString("IgnoreSslErrorsOptionDesc", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error connecting snapshot &apos;{0}&apos; with {1}: {2}.
+        ///   Looks up a localized string similar to Broker URL.
         /// </summary>
-        internal static string ErrorConnectException {
+        internal static string URLArgDesc {
             get {
-                return ResourceManager.GetString("ErrorConnectException", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is already tracking &apos;{1}&apos;.
-        /// </summary>
-        internal static string ErrorConnectionState {
-            get {
-                return ResourceManager.GetString("ErrorConnectionState", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is not a recognizable absolute URI.
-        /// </summary>
-        internal static string ErrorURL {
-            get {
-                return ResourceManager.GetString("ErrorURL", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Connecting {0} with snapshot {1}.
-        /// </summary>
-        internal static string MsgCmdStart {
-            get {
-                return ResourceManager.GetString("MsgCmdStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Snapshot successfully connected to &apos;{0}&apos;.
-        /// </summary>
-        internal static string MsgCmdSuccess {
-            get {
-                return ResourceManager.GetString("MsgCmdSuccess", resourceCulture);
+                return ResourceManager.GetString("URLArgDesc", resourceCulture);
             }
         }
     }

@@ -117,25 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AdoptCheckpointOptionDesc" xml:space="preserve">
-    <value>Adopt specified checkpoint (-1 for latest) as current one for this connection</value>
+  <data name="AuthOptionDesc" xml:space="preserve">
+    <value>Authentication type to use with MarBas broker connection</value>
   </data>
-  <data name="CmdDesc" xml:space="preserve">
-    <value>Connects a tracking snapshot with MarBas broker instance</value>
+  <data name="IgnoreSslErrorsOptionDesc" xml:space="preserve">
+    <value>Ignore SSL errors, specifically trust all (self-signed) certificates, only supported if DOTNET_ENVIRONMENT=Development is set</value>
   </data>
-  <data name="ErrorConnectException" xml:space="preserve">
-    <value>Error connecting snapshot '{0}' with {1}: {2}</value>
-  </data>
-  <data name="ErrorConnectionState" xml:space="preserve">
-    <value>'{0}' is already tracking '{1}'</value>
-  </data>
-  <data name="ErrorURL" xml:space="preserve">
-    <value>'{0}' is not a recognizable absolute URI</value>
-  </data>
-  <data name="MsgCmdStart" xml:space="preserve">
-    <value>Connecting {0} with snapshot {1}</value>
-  </data>
-  <data name="MsgCmdSuccess" xml:space="preserve">
-    <value>Snapshot successfully connected to '{0}'</value>
+  <data name="URLArgDesc" xml:space="preserve">
+    <value>Broker URL</value>
   </data>
 </root>

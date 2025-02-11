@@ -37,6 +37,8 @@ namespace MarBasGleaner.Tracking
 
         public int LastPushCheckpoint { get => _localState?.LastPushCheckpoint ?? 0; set => (_localState ?? new()).LastPushCheckpoint = value; }
 
+        public bool LastPushHasErrors { get => _localState?.LastPushHasErrors ?? false; set => (_localState ?? new()).LastPushHasErrors = value; }
+
         public Guid? BrokerInstanceId => _localState?.InstanceId;
 
         public ConnectionSettings? ConnectionSettings => _localState?.Connection;
@@ -518,6 +520,7 @@ namespace MarBasGleaner.Tracking
             public ConnectionSettings? Connection { get; set; }
             public Guid InstanceId { get; set; }
             public int LastPushCheckpoint { get; set; }
+            public bool LastPushHasErrors { get; set; } = false;
             public SnapshotCheckpoint ActiveCheckpoint { get; set; } = new();
         }
     }
