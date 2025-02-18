@@ -1,5 +1,7 @@
 # marbas-gleaner
-Serialization and synchronization tool for MarBas system
+![Cross-Platform Compatibility](https://jstools.dev/img/badges/os-badges.svg) ![Tool](https://img.shields.io/badge/.Net-8-lightblue) [<img src="https://img.shields.io/github/v/release/Crafted-Solutions/marbas-silo" title="Latest">](../../releases/latest)
+
+Serialization and synchronization tool for [MarBas](../../../marbas-databroker) system
 
 ## Building
 Execute in the solution directory
@@ -15,14 +17,15 @@ dotnet publish src/MarBasGleaner/MarBasGleaner.csproj -p:PublishProfile=TARGET_O
 Binaries will be published to `distr` directory.
 
 ## Running
-Either execute in the solution directory
+If you cloned the repository execute in the solution directory
 ```sh
 dotnet run --project src/MarBasGleaner/MarBasGleaner.csproj -- <ARGUMENTS>
 ```
-Or build binary of your choice (like described in [Building Releasable Binaries]) change to the release directory and run
+Alternatively download binary of your choice from [Releases](../../releases/latest) or build it yourself (like described in [Building Releasable Binaries]) change to the download / release directory and run
 ```sh
 mbglean <ARGUMENTS>
 ```
+
 ### Program Arguments
 Available arguments and their description can be viewed by executing the program with `-?`, `-h` or `--help` option.
 
@@ -147,23 +150,17 @@ Options:
 ```
 
 ## Using NuGet Packages
-1. Generate your GitHub personal access token [here](https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fsettings%2Ftokens) with **read:packages** permission.
-1. Add https://nuget.pkg.github.com/Crafted-Solutions/index.json repository to your **local** `nuget.config`:
-    ```xml
-    <packageSources>
-        <add key="crafted-solutions" value="https://nuget.pkg.github.com/Crafted-Solutions/index.json"/>
-    </packageSources>
-    <packageSourceCredentials>
-        <crafted-solutions>
-            <add key="Username" value="YOUR_USER_NAME"/>
-            <add key="ClearTextPassword" value="YOUR_PACKAGE_TOKEN"/>
-        </crafted-solutions>
-    </packageSourceCredentials>
-    ```
-    Alternatively run this command
-    ```sh
-    dotnet nuget add source https://nuget.pkg.github.com/Crafted-Solutions/index.json -n crafted-solutions -u YOUR_USER_NAME -p YOUR_PACKAGE_TOKEN --store-password-in-clear-text
-    ```
-    Alternatively in Visual Studio go to “Tools” -> “Options” -> “NuGet Package Manager” -> “Package Sources” and add the repository as new source.
-    
-    *DON'T COMMIT ANY CONFIGURATION CONTAINING TOKENS!*
+Add https://nuget.pkg.github.com/Crafted-Solutions/index.json repository to your **local** `nuget.config`:
+```xml
+<packageSources>
+    <add key="crafted-solutions" value="https://nuget.pkg.github.com/Crafted-Solutions/index.json"/>
+</packageSources>
+```
+Alternatively run this command
+```sh
+dotnet nuget add source https://nuget.pkg.github.com/Crafted-Solutions/index.json -n crafted-solutions
+```
+Alternatively in Visual Studio go to “Tools” -> “Options” -> “NuGet Package Manager” -> “Package Sources” and add the repository as new source.
+
+## Contributing
+All contributions to development and error fixing are welcome. Please always use `develop` branch for forks and pull requests, `main` is reserved for stable releases and critical vulnarability fixes only. 
