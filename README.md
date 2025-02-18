@@ -1,5 +1,5 @@
 # marbas-gleaner
-![Cross-Platform Compatibility](https://jstools.dev/img/badges/os-badges.svg) ![Tool](https://img.shields.io/badge/.Net-8-lightblue) [<img src="https://img.shields.io/github/v/release/Crafted-Solutions/marbas-silo" title="Latest">](../../releases/latest)
+![Cross-Platform Compatibility](https://jstools.dev/img/badges/os-badges.svg) ![Tool](https://img.shields.io/badge/.Net-8-lightblue) [<img src="https://img.shields.io/github/v/release/Crafted-Solutions/marbas-gleaner" title="Latest">](../../releases/latest)
 
 Serialization and synchronization tool for [MarBas](../../../marbas-databroker) system
 
@@ -160,7 +160,7 @@ Alternatively run this command
 ```sh
 dotnet nuget add source https://nuget.pkg.github.com/Crafted-Solutions/index.json -n crafted-solutions
 ```
-Alternatively in Visual Studio go to ìToolsî -> ìOptionsî -> ìNuGet Package Managerî -> ìPackage Sourcesî and add the repository as new source.
+Alternatively in Visual Studio go to ‚ÄúTools‚Äù -> ‚ÄúOptions‚Äù -> ‚ÄúNuGet Package Manager‚Äù -> ‚ÄúPackage Sources‚Äù and add the repository as new source.
 
 ## Contributing
 All contributions to development and error fixing are welcome. Please always use `develop` branch for forks and pull requests, `main` is reserved for stable releases and critical vulnarability fixes only. 
