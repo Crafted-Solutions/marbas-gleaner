@@ -1,7 +1,8 @@
-﻿using MarBasGleaner.BrokerAPI;
-using MarBasGleaner.BrokerAPI.Auth;
+﻿using CraftedSolutions.MarBasGleaner.BrokerAPI;
+using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
+using MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Tracking
+namespace CraftedSolutions.MarBasGleaner.Tracking
 {
     internal sealed class TrackingService(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider, IHostEnvironment environment) : ITrackingService
     {

@@ -1,4 +1,4 @@
-﻿namespace MarBasGleaner.Tracking
+﻿namespace CraftedSolutions.MarBasGleaner.Tracking
 {
     internal enum GrainTrackingStatus
     {

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace MarBasGleaner.Tracking
+namespace CraftedSolutions.MarBasGleaner.Tracking
 {
     internal class Snapshot
     {

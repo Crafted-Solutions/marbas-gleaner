@@ -1,8 +1,8 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-using MarBasGleaner.BrokerAPI.Auth;
+using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
 
-namespace MarBasGleaner.BrokerAPI
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI
 {
     internal class ConnectionSettings
     {

@@ -5,6 +5,9 @@ on:
   release:
     types: [published]
 
+env:
+    PROJECT_NAME: MarBasGleaner
+
 jobs:
 
   release:
@@ -45,31 +48,20 @@ jobs:
     - name: Set VERSION variable from tag
       shell: bash
       run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
-    - name: Add GitHub package source
-      shell: bash
-      run: dotnet nuget add source https://nuget.pkg.github.com/Crafted-Solutions/index.json -n cs -u ${NUGET_USER} -p ${NUGET_TOKEN} --store-password-in-clear-text
-      env:
-        NUGET_TOKEN: ${{ secrets.PACKAGE_READ_TOKEN }}
-        NUGET_USER: ${{ vars.NUGET_USER }}
     - name: Build
       shell: bash
       run: |
-        dotnet publish src/MarBasGleaner/MarBasGleaner.csproj -p:PublishProfile=${{ matrix.target }} -p:Version=${VERSION}
+        dotnet publish src/${PROJECT_NAME}/${PROJECT_NAME}.csproj -p:PublishProfile=${{ matrix.target }} -p:Version=${VERSION}
 
         if [ "${{ matrix.target }}" == "win-x64" ]; then
-            7z a -tzip "MarBasGleaner-${VERSION}-${{ matrix.target }}.zip" "./distr/${{ matrix.target }}/*"
+            7z a -tzip "${PROJECT_NAME}-${VERSION}-${{ matrix.target }}.zip" "./distr/${{ matrix.target }}/*"
         else
-            tar czvf "MarBasGleaner-${VERSION}-${{ matrix.target }}.tar.gz" -C "./distr/${{ matrix.target }}" .
+            tar czvf "${PROJECT_NAME}-${VERSION}-${{ matrix.target }}.tar.gz" -C "./distr/${{ matrix.target }}" .
         fi
 
     - name: Publish to GitHub
       uses: softprops/action-gh-release@v2
       with:
-        files: "MarBasGleaner-*"
+        files: "${{ env.PROJECT_NAME }}-${{ env.VERSION }}-*"
       env:
         GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
-    - name: Cleanup
-      if: always()
-      continue-on-error: true
-      run: |
-        dotnet nuget remove source cs
