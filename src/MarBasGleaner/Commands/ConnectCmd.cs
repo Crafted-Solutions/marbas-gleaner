@@ -1,10 +1,10 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
-    internal sealed class ConnectCmd(): ConnectBaseCmd("connect", ConnectCmdL10n.CmdDesc)
+    internal sealed class ConnectCmd() : ConnectBaseCmd("connect", ConnectCmdL10n.CmdDesc)
     {
         protected override void Setup()
         {
@@ -15,7 +15,7 @@ namespace MarBasGleaner.Commands
         public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectBaseCmd.Worker(trackingService, (ILogger)logger)
         {
             public int AdoptCheckpoint { get; set; } = 0;
- 
+
 
             public override async Task<int> InvokeAsync(InvocationContext context)
             {
@@ -33,7 +33,7 @@ namespace MarBasGleaner.Commands
                 }
                 if (snapshotDir.IsConnected)
                 {
-                    return ReportError(CmdResultCode.SnapshotStateError, String.Format(ConnectCmdL10n.ErrorConnectionState, snapshotDir.FullPath, snapshotDir.ConnectionSettings?.BrokerUrl));
+                    return ReportError(CmdResultCode.SnapshotStateError, string.Format(ConnectCmdL10n.ErrorConnectionState, snapshotDir.FullPath, snapshotDir.ConnectionSettings?.BrokerUrl));
                 }
 
                 if (_logger.IsEnabled(LogLevel.Debug))

@@ -3,14 +3,14 @@ using System.CommandLine.Invocation;
 using DiffPlex.DiffBuilder.Model;
 using DiffPlex.DiffBuilder;
 using DiffPlex;
-using MarBasGleaner.Json;
 using System.Text.Json;
-using MarBasGleaner.Tracking;
-using MarBasSchema.Transport;
+using CraftedSolutions.MarBasSchema.Transport;
+using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.Json;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
-    internal sealed class DiffCmd: GenericCmd
+    internal sealed class DiffCmd : GenericCmd
     {
         public enum CompareMode
         {
@@ -21,7 +21,7 @@ namespace MarBasGleaner.Commands
             Broker2Snapshot = Snapshot << 8 | Broker
         }
 
-        public DiffCmd():
+        public DiffCmd() :
             base("diff", DiffCmdL10n.CmdDesc)
         {
             Setup();
@@ -45,7 +45,7 @@ namespace MarBasGleaner.Commands
 
             var diffBuilder = new InlineDiffBuilder(new Differ());
             var diff = diffBuilder.BuildDiffModel(localText, brokerText);
-            
+
             if (diff.HasDifferences)
             {
                 foreach (var line in diff.Lines)

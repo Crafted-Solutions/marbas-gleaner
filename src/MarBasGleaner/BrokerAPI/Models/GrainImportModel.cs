@@ -1,7 +1,7 @@
-﻿using MarBasSchema.Transport;
+﻿using CraftedSolutions.MarBasSchema.Transport;
 using System.Collections.Immutable;
 
-namespace MarBasGleaner.BrokerAPI.Models
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Models
 {
     internal sealed class GrainImportModel
     {

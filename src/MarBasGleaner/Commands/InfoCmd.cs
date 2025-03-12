@@ -1,9 +1,9 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using MarBasGleaner.Tracking;
-using MarBasSchema.Grain;
+using CraftedSolutions.MarBasSchema.Grain;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class InfoCmd : GenericCmd
     {

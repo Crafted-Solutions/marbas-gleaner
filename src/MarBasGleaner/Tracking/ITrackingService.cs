@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
-using MarBasGleaner.BrokerAPI;
+using CraftedSolutions.MarBasGleaner.BrokerAPI;
+using MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Tracking
+namespace CraftedSolutions.MarBasGleaner.Tracking
 {
     internal interface ITrackingService
     {

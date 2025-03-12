@@ -1,13 +1,13 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using MarBasSchema;
-using MarBasSchema.Transport;
-using MarBasSchema.IO;
-using MarBasCommon.Json;
-using MarBasSchema.Broker;
+using CraftedSolutions.MarBasSchema;
+using CraftedSolutions.MarBasSchema.Transport;
+using CraftedSolutions.MarBasSchema.IO;
+using CraftedSolutions.MarBasCommon.Json;
+using CraftedSolutions.MarBasSchema.Broker;
 using System.Text.Encodings.Web;
 
-namespace MarBasGleaner.Json
+namespace CraftedSolutions.MarBasGleaner.Json
 {
     internal static class JsonDefaults
     {

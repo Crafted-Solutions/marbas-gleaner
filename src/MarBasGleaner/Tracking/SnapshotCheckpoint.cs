@@ -1,6 +1,6 @@
-﻿namespace MarBasGleaner.Tracking
+﻿namespace CraftedSolutions.MarBasGleaner.Tracking
 {
-    internal class SnapshotCheckpoint: ICloneable
+    internal class SnapshotCheckpoint : ICloneable
     {
         public static readonly DateTime BuiltInGrainsMTime = new(2024, 1, 5, 0, 0, 11, DateTimeKind.Utc);
 
@@ -23,7 +23,7 @@
 
         public bool IsSame(SnapshotCheckpoint? other)
         {
-            return ReferenceEquals(this, other) || (null != other && InstanceId == other.InstanceId && Ordinal == other.Ordinal && Latest == other.Latest);
+            return ReferenceEquals(this, other) || null != other && InstanceId == other.InstanceId && Ordinal == other.Ordinal && Latest == other.Latest;
         }
 
         object ICloneable.Clone()

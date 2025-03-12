@@ -1,9 +1,9 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using MarBasGleaner.Tracking;
-using MarBasSchema.Transport;
+using CraftedSolutions.MarBasSchema.Transport;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class PushCmd : GenericCmd
     {
@@ -23,7 +23,7 @@ namespace MarBasGleaner.Commands
             AddOption(StrategyOption);
         }
 
-        public new sealed class Worker: GenericCmd.Worker
+        public new sealed class Worker : GenericCmd.Worker
         {
             public int StartingCheckpoint { get; set; } = -1;
             public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
