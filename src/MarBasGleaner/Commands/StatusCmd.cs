@@ -1,10 +1,10 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using MarBasGleaner.Tracking;
-using MarBasSchema.Grain;
-using MarBasSchema.Transport;
+using CraftedSolutions.MarBasSchema.Grain;
+using CraftedSolutions.MarBasSchema.Transport;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
 
     internal sealed class StatusCmd : GenericCmd
@@ -55,7 +55,7 @@ namespace MarBasGleaner.Commands
                     DisplayWarning(StatusCmdL10n.WarnSnapshotModified);
                 }
 
-                var rootId = (Guid)(snapshotDir.Snapshot?.AnchorId!);
+                var rootId = (Guid)snapshotDir.Snapshot?.AnchorId!;
 
                 var brokerMods = await client.ListGrains(rootId, SnapshotScope.Recursive == (snapshotDir.Snapshot.Scope & SnapshotScope.Recursive),
                     mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: ctoken);
@@ -93,7 +93,7 @@ namespace MarBasGleaner.Commands
                             && grain.MTime > (AssumeReset ? SnapshotCheckpoint.BuiltInGrainsMTime : snapshotDir.LocalCheckpoint.Latest))
                         {
                             status.snapshot = GrainTrackingStatus.Modified;
-                            if (AssumeReset || (!isCheckpointInSync && !snapshotDir.LocalCheckpoint.Modifications.Contains(grain.Id)))
+                            if (AssumeReset || !isCheckpointInSync && !snapshotDir.LocalCheckpoint.Modifications.Contains(grain.Id))
                             {
                                 additionsToCheck[grain.Id] = grain;
                                 pending = true;
@@ -238,7 +238,7 @@ namespace MarBasGleaner.Commands
                             }
 
                         }
-                        
+
                         Console.Write($"[{GetStatusIndicator(statusSnapshot)}{GetStatusIndicator(statusBroker)}] {grain.Id} ({grain.Path ?? "\\"}){Environment.NewLine}");
                     }
                     finally

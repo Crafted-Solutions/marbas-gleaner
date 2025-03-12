@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MarBasGleaner.BrokerAPI.Models
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Models
 {
     public class MarBasResult<T> : IMarBasResult<T>
     {

@@ -3,8 +3,9 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security;
 using System.Text;
+using CraftedSolutions.MarBasGleaner.BrokerAPI;
 
-namespace MarBasGleaner.BrokerAPI.Auth
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 {
     internal class BasicAuthenticator : IAuthenticator
     {

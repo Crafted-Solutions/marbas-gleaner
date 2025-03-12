@@ -1,10 +1,10 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-using MarBasCommon;
-using MarBasSchema;
-using MarBasSchema.Grain;
+using CraftedSolutions.MarBasCommon;
+using CraftedSolutions.MarBasSchema;
+using CraftedSolutions.MarBasSchema.Grain;
 
-namespace MarBasGleaner.BrokerAPI.Models
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Models
 {
     internal class GrainYield : GrainPlain, ITypeConstraint
     {

@@ -1,4 +1,6 @@
-﻿namespace MarBasGleaner.BrokerAPI.Auth
+﻿using CraftedSolutions.MarBasGleaner.BrokerAPI;
+
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 {
     internal interface IAuthenticator
     {

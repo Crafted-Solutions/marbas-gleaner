@@ -1,13 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
     <Import Project="../../Common.Build.props" />
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.1.1</Version>
+    <Version>0.1.1.1</Version>
     <UserSecretsId>dotnet-MarBasGleaner-a1530001-ad9c-44ab-ac75-b038cd799a50</UserSecretsId>
-    <StartupObject>MarBasGleaner.Program</StartupObject>
+    <StartupObject>CraftedSolutions.MarBasGleaner.Program</StartupObject>
     <AssemblyName>mbglean</AssemblyName>
   </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -30,10 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CraftedSolutions.MarBasSchema" Version="0.1.16.1" />
     <PackageReference Include="DiffPlex" Version="1.7.2" />
-    <PackageReference Include="MarBasSchema" Version="0.1.16" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
     <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
   </ItemGroup>
 

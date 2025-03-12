@@ -2,11 +2,15 @@
 <Project>
     <PropertyGroup>
         <Product>MarBas Gleaner</Product>
-        <Company>MarBas</Company>
+        <Company>CraftedSolutions</Company>
         <Copyright>© 2024</Copyright>
-        <PackageProjectUrl>https://github.com/users/hatelamers/projects/2</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/hatelamers/marbas-gleaner</RepositoryUrl>
+        <Authors>marbasteam</Authors>
+    </PropertyGroup>
+    <PropertyGroup>
+        <PackageProjectUrl>https://github.com/orgs/Crafted-Solutions/projects/1</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Crafted-Solutions/marbas-gleaner</RepositoryUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Authors>marbasteam</Authors>
+        <PackageId>$(Company).$(AssemblyName)</PackageId>
     </PropertyGroup>
 </Project>

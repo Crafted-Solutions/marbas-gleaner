@@ -3,14 +3,14 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
-using MarBasGleaner.BrokerAPI.Models;
-using MarBasGleaner.Json;
-using MarBasSchema.Broker;
-using MarBasSchema.Grain;
-using MarBasSchema.Sys;
-using MarBasSchema.Transport;
+using CraftedSolutions.MarBasSchema.Broker;
+using CraftedSolutions.MarBasSchema.Grain;
+using CraftedSolutions.MarBasSchema.Sys;
+using CraftedSolutions.MarBasSchema.Transport;
+using CraftedSolutions.MarBasGleaner.BrokerAPI.Models;
+using CraftedSolutions.MarBasGleaner.Json;
 
-namespace MarBasGleaner.BrokerAPI
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI
 {
     internal sealed class BrokerClient(HttpClient httpClient, ILogger<BrokerClient> logger) : IBrokerClient
     {
@@ -46,7 +46,7 @@ namespace MarBasGleaner.BrokerAPI
                 return null;
             }
             using var resp = await _httpClient.GetAsync($"{ApiPrefix}Grain/{id:D}", cancellationToken);
-            if (!((!notFoundIsError && HttpStatusCode.NotFound == resp.StatusCode) || HandleHttpError(resp)))
+            if (!(!notFoundIsError && HttpStatusCode.NotFound == resp.StatusCode || HandleHttpError(resp)))
             {
                 var mbresult = await resp.Content.ReadFromJsonAsync<MarBasResult<GrainYield>>(cancellationToken);
                 if (null != mbresult && mbresult.Success)
@@ -84,7 +84,7 @@ namespace MarBasGleaner.BrokerAPI
 
 
             var result = new Dictionary<Guid, bool>(ids.Select(x => new KeyValuePair<Guid, bool>(x, false)));
-            
+
             using var resp = await _httpClient.PostAsJsonAsync($"{ApiPrefix}Grain/VerifyExist", ids, cancellationToken);
             if (!HandleHttpError(resp))
             {

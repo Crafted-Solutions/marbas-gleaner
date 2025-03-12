@@ -1,4 +1,4 @@
-﻿namespace MarBasGleaner.Commands
+﻿namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal enum CmdResultCode
     {

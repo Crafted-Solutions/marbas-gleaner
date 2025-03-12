@@ -1,10 +1,10 @@
-﻿using MarBasSchema.Grain;
-using MarBasSchema.Sys;
-using MarBasSchema.Transport;
+﻿using CraftedSolutions.MarBasSchema.Grain;
+using CraftedSolutions.MarBasSchema.Sys;
+using CraftedSolutions.MarBasSchema.Transport;
 
-namespace MarBasGleaner.BrokerAPI
+namespace CraftedSolutions.MarBasGleaner.BrokerAPI
 {
-    internal interface IBrokerClient: IDisposable
+    internal interface IBrokerClient : IDisposable
     {
         Uri? APIUrl { get; }
         Task<IServerInfo?> GetSystemInfo(CancellationToken cancellationToken = default);

@@ -1,10 +1,11 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using MarBasGleaner.BrokerAPI;
 using MarBasGleaner.Tracking;
-using MarBasSchema.Sys;
+using CraftedSolutions.MarBasSchema.Sys;
+using CraftedSolutions.MarBasGleaner.BrokerAPI;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal abstract class GenericCmd : Command
     {
@@ -169,7 +170,7 @@ namespace MarBasGleaner.Commands
             {
                 return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorConnectedState, snapshotDir.FullPath));
             }
-            if (requiresCheckpoint && ((mustBeConnected && null == snapshotDir.LocalCheckpoint) || null == snapshotDir.SharedCheckpoint))
+            if (requiresCheckpoint && (mustBeConnected && null == snapshotDir.LocalCheckpoint || null == snapshotDir.SharedCheckpoint))
             {
                 return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorCheckpointMissing, SnapshotDirectory.LocalStateFileName));
             }

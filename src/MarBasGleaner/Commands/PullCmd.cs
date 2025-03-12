@@ -1,12 +1,13 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
 using MarBasGleaner.Tracking;
-using MarBasSchema.Grain;
-using MarBasSchema.Transport;
+using CraftedSolutions.MarBasSchema.Grain;
+using CraftedSolutions.MarBasSchema.Transport;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
-    internal class PullCmd: GenericCmd
+    internal class PullCmd : GenericCmd
     {
         public static readonly Option<bool> OverwriteOption = new(new[] { "-o", "--overwrite" }, PullCmdL10n.OverwriteOptionDesc);
         public static readonly Option<bool> ForceCheckpointOption = new("--force-checkpoint", PullCmdL10n.ForceCheckpointOptionDesc);
@@ -62,7 +63,7 @@ namespace MarBasGleaner.Commands
 
                 var isSafeCheckpoint = snapshotDir.LocalCheckpoint!.IsSame(snapshotDir.SharedCheckpoint);
                 var targetCheckpoint = ForceCheckpoint || !isSafeCheckpoint
-                    ? new SnapshotCheckpoint() 
+                    ? new SnapshotCheckpoint()
                     {
                         InstanceId = snapshotDir.LocalCheckpoint.InstanceId,
                         Ordinal = snapshotDir.SharedCheckpoint!.Ordinal + 1,
@@ -70,8 +71,8 @@ namespace MarBasGleaner.Commands
                     }
                     : snapshotDir.LocalCheckpoint;
 
-                var rootId = (Guid)(snapshotDir.Snapshot?.AnchorId!);
-               
+                var rootId = (Guid)snapshotDir.Snapshot?.AnchorId!;
+
                 var brokerGrains = await client.ListGrains(rootId, SnapshotScope.Recursive == (SnapshotScope.Recursive & snapshotDir.Snapshot.Scope),
                     mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: ctoken);
 
@@ -189,7 +190,7 @@ namespace MarBasGleaner.Commands
                 {
                     return result;
                 }
-                
+
                 DisplayMessage(string.Format(PullCmdL10n.StatusGrainConflict, brokerGrain.Id, brokerGrain.Path ?? " / ", localGrain.MTime, brokerGrain.MTime));
                 bool choiceComplete;
                 do
@@ -197,12 +198,12 @@ namespace MarBasGleaner.Commands
                     DisplayMessage(string.Format(PullCmdL10n.ChoiceGrainConflict, Environment.NewLine));
 
                     int choice;
-                    while (!Int32.TryParse(Console.ReadLine(), out choice) || 1 > choice || 4 < choice)
+                    while (!int.TryParse(Console.ReadLine(), out choice) || 1 > choice || 4 < choice)
                     {
                         DisplayMessage(PullCmdL10n.MsgChooseOf4);
                     }
                     choiceComplete = 4 != choice;
-                    
+
                     switch (choice)
                     {
                         case 1:

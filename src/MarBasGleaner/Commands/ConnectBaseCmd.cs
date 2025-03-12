@@ -1,9 +1,9 @@
 ﻿using System.CommandLine;
-using MarBasGleaner.BrokerAPI;
-using MarBasGleaner.BrokerAPI.Auth;
-using MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.BrokerAPI;
+using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class ConnectBaseCmd : GenericCmd
     {

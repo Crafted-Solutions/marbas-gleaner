@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MarBasGleaner.Commands {
+namespace CraftedSolutions.MarBasGleaner.Commands {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace MarBasGleaner.Commands {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarBasGleaner.Commands.ConnectBaseCmdL10n", typeof(ConnectBaseCmdL10n).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CraftedSolutions.MarBasGleaner.Commands.ConnectBaseCmdL10n", typeof(ConnectBaseCmdL10n).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

@@ -1,8 +1,8 @@
 ﻿using System.CommandLine.Invocation;
-using MarBasGleaner.Tracking;
-using MarBasSchema.Transport;
+using CraftedSolutions.MarBasSchema.Transport;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner.Commands
+namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class SyncCmd
         : GenericCmd

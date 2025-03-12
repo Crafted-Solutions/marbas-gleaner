@@ -1,4 +1,4 @@
-﻿namespace MarBasGleaner.Tracking
+﻿namespace CraftedSolutions.MarBasGleaner.Tracking
 {
     public enum SourceControlFlavor
     {

@@ -1,4 +1,4 @@
-﻿namespace MarBasGleaner.BrokerAPI.Models
+﻿namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Models
 {
     public interface IMarBasResult<T>
     {

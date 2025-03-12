@@ -2,10 +2,10 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Hosting;
 using System.CommandLine.Parsing;
-using MarBasGleaner.Commands;
-using MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.Commands;
+using CraftedSolutions.MarBasGleaner.Tracking;
 
-namespace MarBasGleaner
+namespace CraftedSolutions.MarBasGleaner
 {
     public class Program
     {
