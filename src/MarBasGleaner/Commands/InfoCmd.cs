@@ -41,10 +41,10 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 DisplayMessage(string.Format(InfoCmdL10n.InfoSnapshotVersion, snapshot!.Version));
                 DisplayMessage(string.Format(InfoCmdL10n.InfoShanshotSchemaVersion, snapshot.SchemaVersion));
 
-                var anchor = await snapshotDir.LoadGrainById<GrainPlain>(snapshot.Anchor.Last(), cancellationToken: ctoken);
+                var anchor = await snapshotDir.LoadGrainById<GrainPlain>(snapshot.Anchor.First(), cancellationToken: ctoken);
                 if (null == anchor)
                 {
-                    DisplayMessage(string.Format(InfoCmdL10n.InfoAnchorMissing, string.Join("/", snapshot.Anchor)));
+                    DisplayMessage(string.Format(InfoCmdL10n.InfoAnchorMissing, string.Join("/", snapshot.Anchor.Reverse())));
                 }
                 else
                 {

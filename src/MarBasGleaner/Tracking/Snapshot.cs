@@ -12,7 +12,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public IEnumerable<Guid> Anchor { get; set; } = Array.Empty<Guid>();
         [JsonIgnore]
         [IgnoreDataMember]
-        public Guid AnchorId => Anchor.LastOrDefault();
+        public Guid AnchorId => Anchor.FirstOrDefault();
         public SnapshotScope Scope { get; set; } = SnapshotScope.Recursive;
         public DateTime Updated { get; set; }
         public int Checkpoint { get; set; }
