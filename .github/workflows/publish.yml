@@ -64,4 +64,4 @@ jobs:
       with:
         files: "${{ env.PROJECT_NAME }}-${{ env.VERSION }}-*"
       env:
-        GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
