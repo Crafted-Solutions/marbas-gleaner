@@ -1,6 +1,7 @@
-﻿using System.CommandLine;
+﻿using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
+using System.CommandLine;
 using System.CommandLine.Invocation;
-using CraftedSolutions.MarBasGleaner.Tracking;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -45,7 +46,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 Guid instanceId = Guid.Empty;
                 var connection = CreateConnectionSettings();
-                using (var client = _trackingService.GetBrokerClient(connection))
+                using (var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, ctoken))
                 {
                     var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                     if (CmdResultCode.Success != brokerStat.Code)

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,16 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AuthOptionDesc" xml:space="preserve">
-    <value>Authentication type to use with MarBas broker connection</value>
+  <data name="HintPopupBlocker" xml:space="preserve">
+    <value>If login window won't open, click &lt;a href='{0}' target='worker' onclick='worker=openWorker();return false;'&gt;here&lt;/a&gt;.</value>
   </data>
-  <data name="IgnoreSslErrorsOptionDesc" xml:space="preserve">
-    <value>Ignore SSL errors, specifically trust all (self-signed) certificates, only supported if DOTNET_ENVIRONMENT=Development is set</value>
+  <data name="MsgComplete" xml:space="preserve">
+    <value>Login complete, you may close this window.</value>
   </data>
-  <data name="StoreCredentialsOptionDesc" xml:space="preserve">
-    <value>Store authentication credentials (unencrypted)</value>
+  <data name="MsgProcessing" xml:space="preserve">
+    <value>Processing authorization...</value>
   </data>
-  <data name="URLArgDesc" xml:space="preserve">
-    <value>Broker URL</value>
+  <data name="MsgWaiting" xml:space="preserve">
+    <value>Waiting for login to complete...</value>
+  </data>
+  <data name="TitleAuthProcessor" xml:space="preserve">
+    <value>{0} - Authorization Receiver</value>
+  </data>
+  <data name="TitleLoginController" xml:space="preserve">
+    <value>{0} - Login Controller</value>
   </data>
 </root>

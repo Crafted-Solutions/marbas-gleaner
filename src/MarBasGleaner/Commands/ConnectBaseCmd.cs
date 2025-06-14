@@ -17,8 +17,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         {
             AddArgument(new Argument<Uri>("url", ConnectBaseCmdL10n.URLArgDesc));
             base.Setup();
-            AddOption(new Option<string>("--auth", () => BasicAuthenticator.SchemeName, ConnectBaseCmdL10n.AuthOptionDesc));
+            AddOption(new Option<AuthenticationScheme>("--auth", () => AuthenticationScheme.Auto, ConnectBaseCmdL10n.AuthOptionDesc));
             AddOption(new Option<bool>("--ignore-ssl-errors", () => false, ConnectBaseCmdL10n.IgnoreSslErrorsOptionDesc));
+            AddOption(new Option<bool>("--store-credentials", () => false, ConnectBaseCmdL10n.StoreCredentialsOptionDesc));
         }
 
         public abstract new class Worker : GenericCmd.Worker
@@ -35,18 +36,23 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             }
 
             public Uri? Url { get; set; }
-            public string Auth { get; set; } = BasicAuthenticator.SchemeName;
+            public AuthenticationScheme Auth { get; set; } = AuthenticationScheme.Auto;
             public bool IgnoreSslErrors { get; set; } = false;
+            public bool StoreCredentials { get; set; } = false;
 
 
             protected ConnectionSettings CreateConnectionSettings()
             {
-                return new ConnectionSettings
+                var result = new ConnectionSettings
                 {
                     BrokerUrl = Url!,
-                    AuthenticatorType = AuthenticatorFactory.ResolveAuthenticatorType(Auth) ?? typeof(BasicAuthenticator),
                     IgnoreSslErrors = IgnoreSslErrors
                 };
+                if (AuthenticationScheme.Auto != Auth)
+                {
+                    result.AuthenticatorType = AuthenticatorFactory.ResolveAuthenticatorType(Enum.GetName(Auth)!);
+                }
+                return result;
             }
         }
     }

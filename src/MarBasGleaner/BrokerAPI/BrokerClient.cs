@@ -94,7 +94,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI
                     return mbresult.Yield;
                 }
             }
-            throw new ApplicationException($"API {resp.RequestMessage?.RequestUri} hasn't return expected result");
+            throw new ApplicationException($"API {resp.RequestMessage?.RequestUri} hasn't return expected result (IDs: {string.Join(", ", ids)})");
         }
 
         public async Task<IEnumerable<IGrain>> ListGrains(Guid parentId, bool recursive = false, DateTime? mtimeFrom = null, DateTime? mtimeTo = null, bool includeParent = false, CancellationToken cancellationToken = default)
@@ -230,11 +230,11 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI
         #endregion
 
         #region Helper Methods
-        private bool HandleHttpError(HttpResponseMessage resp)
+        public static bool HandleHttpError(HttpResponseMessage resp, ILogger logger)
         {
             if (!resp.IsSuccessStatusCode)
             {
-                if (_logger.IsEnabled(LogLevel.Error))
+                if (logger.IsEnabled(LogLevel.Error))
                 {
                     var body = string.Empty;
                     try
@@ -242,12 +242,18 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI
                         body = resp.Content.ReadAsStringAsync().Result;
                     }
                     catch (Exception) { }
-                    _logger.LogError("Call to {uri} returned {errCode} ({reason}{body})", resp.RequestMessage?.RequestUri?.ToString() ?? "unknown"
+                    logger.LogError("Call to {uri} returned {errCode} ({reason}{body})", resp.RequestMessage?.RequestUri?.ToString() ?? "unknown"
                         , resp.StatusCode, resp.ReasonPhrase, string.IsNullOrEmpty(body) ? string.Empty : $": {body}");
                 }
                 return true;
             }
             return false;
+
+        }
+
+        private bool HandleHttpError(HttpResponseMessage resp)
+        {
+            return HandleHttpError(resp, _logger);
         }
 
         private static string EncodeJsonParameter<T>(T parameterObj, bool dequote = false)
