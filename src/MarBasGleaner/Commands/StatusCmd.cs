@@ -1,8 +1,9 @@
-﻿using System.CommandLine;
-using System.CommandLine.Invocation;
+﻿using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema.Grain;
 using CraftedSolutions.MarBasSchema.Transport;
-using CraftedSolutions.MarBasGleaner.Tracking;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -39,7 +40,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return result;
                 }
 
-                using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
 
                 var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)

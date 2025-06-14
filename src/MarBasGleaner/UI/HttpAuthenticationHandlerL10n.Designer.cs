@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CraftedSolutions.MarBasGleaner.Commands {
+namespace CraftedSolutions.MarBasGleaner.UI {
     using System;
     
     
@@ -22,14 +22,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ConnectBaseCmdL10n {
+    internal class HttpAuthenticationHandlerL10n {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ConnectBaseCmdL10n() {
+        internal HttpAuthenticationHandlerL10n() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CraftedSolutions.MarBasGleaner.Commands.ConnectBaseCmdL10n", typeof(ConnectBaseCmdL10n).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CraftedSolutions.MarBasGleaner.UI.HttpAuthenticationHandlerL10n", typeof(HttpAuthenticationHandlerL10n).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,38 +61,56 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Authentication type to use with MarBas broker connection.
+        ///   Looks up a localized string similar to If login window won&apos;t open, click &lt;a href=&apos;{0}&apos; target=&apos;worker&apos; onclick=&apos;worker=openWorker();return false;&apos;&gt;here&lt;/a&gt;..
         /// </summary>
-        internal static string AuthOptionDesc {
+        internal static string HintPopupBlocker {
             get {
-                return ResourceManager.GetString("AuthOptionDesc", resourceCulture);
+                return ResourceManager.GetString("HintPopupBlocker", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ignore SSL errors, specifically trust all (self-signed) certificates, only supported if DOTNET_ENVIRONMENT=Development is set.
+        ///   Looks up a localized string similar to Login complete, you may close this window..
         /// </summary>
-        internal static string IgnoreSslErrorsOptionDesc {
+        internal static string MsgComplete {
             get {
-                return ResourceManager.GetString("IgnoreSslErrorsOptionDesc", resourceCulture);
+                return ResourceManager.GetString("MsgComplete", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Store authentication credentials (unencrypted).
+        ///   Looks up a localized string similar to Processing authorization....
         /// </summary>
-        internal static string StoreCredentialsOptionDesc {
+        internal static string MsgProcessing {
             get {
-                return ResourceManager.GetString("StoreCredentialsOptionDesc", resourceCulture);
+                return ResourceManager.GetString("MsgProcessing", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Broker URL.
+        ///   Looks up a localized string similar to Waiting for login to complete....
         /// </summary>
-        internal static string URLArgDesc {
+        internal static string MsgWaiting {
             get {
-                return ResourceManager.GetString("URLArgDesc", resourceCulture);
+                return ResourceManager.GetString("MsgWaiting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} - Authorization Receiver.
+        /// </summary>
+        internal static string TitleAuthProcessor {
+            get {
+                return ResourceManager.GetString("TitleAuthProcessor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} - Login Controller.
+        /// </summary>
+        internal static string TitleLoginController {
+            get {
+                return ResourceManager.GetString("TitleLoginController", resourceCulture);
             }
         }
     }

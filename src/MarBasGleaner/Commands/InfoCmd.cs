@@ -1,7 +1,9 @@
-﻿using System.CommandLine;
-using System.CommandLine.Invocation;
-using CraftedSolutions.MarBasSchema.Grain;
+﻿using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
 using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
+using CraftedSolutions.MarBasSchema.Grain;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -66,11 +68,11 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     var connState = new ConnectionCheckResult { Code = CmdResultCode.SnapshotStateError };
                     if (ValidateConnection)
                     {
-                        using var client = _trackingService.GetBrokerClient(conn);
+                        using var client = await _trackingService.GetBrokerClientAsync(conn, cancellationToken: ctoken);
                         connState = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                     }
                     DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionURL, conn.BrokerUrl));
-                    DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionAuth, conn.Authenticator));
+                    DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionAuth, string.IsNullOrEmpty(conn.Authenticator) ? Enum.GetName(AuthenticationScheme.Auto) : conn.Authenticator));
                     DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionStatus, CmdResultCode.SnapshotStateError == connState.Code ? InfoCmdL10n.ConnectionStatusUnknown : $"{connState.Code}"));
                     if (null != connState.Info)
                     {

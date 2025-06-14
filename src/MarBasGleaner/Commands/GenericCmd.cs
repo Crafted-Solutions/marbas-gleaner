@@ -1,22 +1,15 @@
-﻿using System.CommandLine;
-using System.CommandLine.Invocation;
-using MarBasGleaner.Tracking;
-using CraftedSolutions.MarBasSchema.Sys;
-using CraftedSolutions.MarBasGleaner.BrokerAPI;
+﻿using CraftedSolutions.MarBasGleaner.BrokerAPI;
 using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
+using CraftedSolutions.MarBasSchema.Sys;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal abstract class GenericCmd : Command
     {
-        public static readonly string SeparatorLine = new('-', 50);
         public static readonly Option<string> DirectoryOption = new(new[] { "--directory", "-d" }, () => SnapshotDirectory.DefaultPath, GenericCmdL10n.DirectoryOpionDesc);
-
-        [Flags]
-        public enum MessageSeparatorOption
-        {
-            None = 0x0, Before = 0x1, After = 0x2, Both = Before | After
-        }
 
         protected GenericCmd(string name, string? description = null)
             : base(name, description)
@@ -95,65 +88,23 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
         internal static int ReportError(CmdResultCode error, string message)
         {
-            try
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(message);
-                Console.Write(Environment.NewLine);
-            }
-            finally
-            {
-                Console.ResetColor();
-            }
+            ConsoleFeedbackService.WriteError(message);
             return (int)error;
         }
 
         internal static void DisplayInfo(string message)
         {
-            try
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write(message);
-                Console.Write(Environment.NewLine);
-            }
-            finally
-            {
-                Console.ResetColor();
-            }
+            ConsoleFeedbackService.WriteInfo(message);
         }
 
         internal static void DisplayWarning(string message)
         {
-            try
-            {
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.Write(message);
-                Console.Write(Environment.NewLine);
-            }
-            finally
-            {
-                Console.ResetColor();
-            }
+            ConsoleFeedbackService.WriteWarning(message);
         }
 
         internal static void DisplayMessage(string message, MessageSeparatorOption separatorOption = MessageSeparatorOption.None)
         {
-            Console.ResetColor();
-            if (MessageSeparatorOption.Before == (MessageSeparatorOption.Before & separatorOption))
-            {
-                Console.Write(SeparatorLine);
-                Console.Write(Environment.NewLine);
-            }
-            if (!string.IsNullOrEmpty(message))
-            {
-                Console.Write(message);
-                Console.Write(Environment.NewLine);
-            }
-            if (MessageSeparatorOption.After == (MessageSeparatorOption.After & separatorOption))
-            {
-                Console.Write(SeparatorLine);
-                Console.Write(Environment.NewLine);
-            }
+            ConsoleFeedbackService.WriteMessage(message, separatorOption);
         }
 
         protected static int ValidateSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true, bool requiresCheckpoint = true)

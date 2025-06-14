@@ -1,17 +1,16 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using CraftedSolutions.MarBasCommon;
+using CraftedSolutions.MarBasGleaner.BrokerAPI;
+using CraftedSolutions.MarBasGleaner.Json;
+using CraftedSolutions.MarBasSchema;
+using CraftedSolutions.MarBasSchema.Broker;
+using CraftedSolutions.MarBasSchema.Grain;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using CraftedSolutions.MarBasCommon;
-using CraftedSolutions.MarBasSchema;
-using CraftedSolutions.MarBasSchema.Broker;
-using CraftedSolutions.MarBasSchema.Grain;
-using CraftedSolutions.MarBasGleaner.BrokerAPI;
-using CraftedSolutions.MarBasGleaner.Tracking;
-using CraftedSolutions.MarBasGleaner.Json;
 
-namespace MarBasGleaner.Tracking
+namespace CraftedSolutions.MarBasGleaner.Tracking
 {
     internal partial class SnapshotDirectory(ILogger<SnapshotDirectory> logger, string path = SnapshotDirectory.DefaultPath)
     {

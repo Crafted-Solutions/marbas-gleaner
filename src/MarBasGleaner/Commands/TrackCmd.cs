@@ -1,9 +1,9 @@
-﻿using System.CommandLine;
-using System.CommandLine.Invocation;
-using MarBasGleaner.Tracking;
+﻿using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema;
 using CraftedSolutions.MarBasSchema.Broker;
-using CraftedSolutions.MarBasGleaner.Tracking;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -77,7 +77,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 };
                 var connection = CreateConnectionSettings();
 
-                using var client = _trackingService.GetBrokerClient(connection);
+                using var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, ctoken);
 
                 var brokerStat = await ValidateBrokerConnection(client, cancellationToken: ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)

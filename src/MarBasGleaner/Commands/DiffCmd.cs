@@ -1,12 +1,13 @@
-﻿using System.CommandLine;
-using System.CommandLine.Invocation;
-using DiffPlex.DiffBuilder.Model;
-using DiffPlex.DiffBuilder;
-using DiffPlex;
-using System.Text.Json;
-using CraftedSolutions.MarBasSchema.Transport;
+﻿using CraftedSolutions.MarBasGleaner.Json;
 using CraftedSolutions.MarBasGleaner.Tracking;
-using CraftedSolutions.MarBasGleaner.Json;
+using CraftedSolutions.MarBasGleaner.UI;
+using CraftedSolutions.MarBasSchema.Transport;
+using DiffPlex;
+using DiffPlex.DiffBuilder;
+using DiffPlex.DiffBuilder.Model;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using System.Text.Json;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -126,7 +127,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                         idsToFetch.Add(ids.Item2);
                     }
 
-                    using var client = _trackingService.GetBrokerClient(snapshotDir.ConnectionSettings!);
+                    using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
                     var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                     if (CmdResultCode.Success != brokerStat.Code)
                     {
