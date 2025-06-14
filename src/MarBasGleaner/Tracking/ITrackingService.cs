@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-using CraftedSolutions.MarBasGleaner.BrokerAPI;
-using MarBasGleaner.Tracking;
+﻿using CraftedSolutions.MarBasGleaner.BrokerAPI;
 
 namespace CraftedSolutions.MarBasGleaner.Tracking
 {
@@ -9,5 +7,6 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         SnapshotDirectory GetSnapshotDirectory(string path = SnapshotDirectory.DefaultPath);
         Task<SnapshotDirectory> GetSnapshotDirectoryAsync(string path = SnapshotDirectory.DefaultPath, CancellationToken cancellationToken = default);
         IBrokerClient GetBrokerClient(ConnectionSettings settings, bool storeCredentials = true);
+        Task<IBrokerClient> GetBrokerClientAsync(ConnectionSettings settings, bool storeCredentials = true, CancellationToken cancellationToken = default);
     }
 }

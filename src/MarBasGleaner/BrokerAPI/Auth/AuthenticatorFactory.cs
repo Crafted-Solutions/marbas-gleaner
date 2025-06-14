@@ -1,26 +1,48 @@
-﻿using CraftedSolutions.MarBasGleaner.BrokerAPI;
-
-namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
+﻿namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 {
-    internal static class AuthenticatorFactory
+    internal class AuthenticatorFactory(IServiceProvider serviceProvider)
     {
+        private readonly IServiceProvider _serviceProvider = serviceProvider;
+
+        public IAuthenticator? CreateAuthenticator(string schema)
+        {
+            return CreateAuthenticator(schema, _serviceProvider);
+        }
+
+        public IAuthenticator? CreateAuthenticator(ConnectionSettings settings)
+        {
+            return CreateAuthenticator(settings, _serviceProvider);
+        }
+
         public static Type? ResolveAuthenticatorType(string schema)
         {
-            var fqn = $"{nameof(MarBasGleaner)}.{nameof(BrokerAPI)}.{schema}Authenticator";
+            var fqn = $"{typeof(AuthenticatorFactory).Namespace}.{schema}Authenticator";
             return Type.GetType(fqn);
         }
 
-        public static IAuthenticator? CreateAuthenticator(string schema)
+        public static IAuthenticator? CreateAuthenticator(string schema, IServiceProvider serviceProvider)
         {
             var type = ResolveAuthenticatorType(schema);
-            return (null == type ? null : Activator.CreateInstance(type)) as IAuthenticator;
+            return null == type ? null : Activator.CreateInstance(type, serviceProvider) as IAuthenticator;
         }
 
-        public static IAuthenticator? CreateAuthenticator(ConnectionSettings settings)
+        public static IAuthenticator? CreateAuthenticator(ConnectionSettings settings, IServiceProvider serviceProvider)
         {
-            var type = Type.GetType(settings.Authenticator);
-            return (null == type ? null : Activator.CreateInstance(type)) as IAuthenticator;
+            IAuthenticator? result = null;
+            if (null != settings.Authenticator)
+            {
+                result = null == settings.AuthenticatorType ? null : Activator.CreateInstance(settings.AuthenticatorType, serviceProvider) as IAuthenticator;
+            }
+            var schema = settings.BrokerAuthConfig?.Schema;
+            if (null != result)
+            {
+                if (!string.IsNullOrEmpty(schema) && result.GetType() != ResolveAuthenticatorType(schema))
+                {
+                    throw new InvalidOperationException($"Broker authentication schema {schema} is incompatible with configured authenticator {result.GetType()}");
+                }
+                return result;
+            }
+            return string.IsNullOrEmpty(schema) ? null : CreateAuthenticator(schema, serviceProvider);
         }
-
     }
 }

@@ -1,9 +1,11 @@
+using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
+using CraftedSolutions.MarBasGleaner.Commands;
+using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Hosting;
 using System.CommandLine.Parsing;
-using CraftedSolutions.MarBasGleaner.Commands;
-using CraftedSolutions.MarBasGleaner.Tracking;
 
 namespace CraftedSolutions.MarBasGleaner
 {
@@ -24,11 +26,19 @@ namespace CraftedSolutions.MarBasGleaner
                         services
                             .AddOptions()
                             .AddHttpClient()
+                            .AddSingleton<AuthenticatorFactory>()
+                            .AddSingleton<IFeedbackService, ConsoleFeedbackService>()
                             .AddSingleton<ITrackingService, TrackingService>();
 
-                        if (ctx.HostingEnvironment.IsDevelopment() && ctx.Configuration.GetValue<bool>("HttpClient:UseLaxSSLHandler"))
+                        services.AddHttpClient("bootstrap-client");
+                        services.AddHttpClient("broker-client");
+                        if (ctx.HostingEnvironment.IsDevelopment() && ctx.Configuration.GetValue("HttpClient:UseLaxSSLHandler", false))
                         {
-                            services.AddHttpClient("lax-ssl-client").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+                            services.AddHttpClient("bootstrap-lax-ssl-client").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+                            {
+                                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                            });
+                            services.AddHttpClient("broker-lax-ssl-client").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
                             {
                                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
                             });
