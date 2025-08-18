@@ -12,6 +12,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
     internal class OIDCAuthenticator : IAuthenticator
     {
         public const string ParamAccesToken = "accessToken";
+        public const string ParamIdToken = "idToken";
         public const string ParamRefreshToken = "refreshToken";
         public const string ParamTokenExpiration = "expiration";
 
@@ -63,12 +64,12 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
             if (settings?.BrokerAuthConfig is IOIDCAuthConfig oidcConfig)
             {
                 ObjectDisposedException.ThrowIf(_disposed, this);
-                var token = settings.AuthenticatorParams.TryGetValue(ParamAccesToken, out string? value) ? value : string.Empty;
+                var token = GetBearerTokenFromSettings(settings, oidcConfig.BearerTokenName);
                 var tokenStatus = CheckTokenStatus(settings, token);
 
-                if (TokenStatus.RefreshRequired == tokenStatus)
+                if (TokenStatus.RefreshRequired == tokenStatus && settings.AuthenticatorParams.TryGetValue(ParamRefreshToken, out var refreshToken))
                 {
-                    var result = await RefreshToken(settings.AuthenticatorParams[ParamRefreshToken], oidcConfig, cancellationToken);
+                    var result = await RefreshToken(refreshToken, oidcConfig, cancellationToken);
                     if (result.IsError)
                     {
                         tokenStatus = TokenStatus.Unknown;
@@ -76,7 +77,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                     else
                     {
                         _feedbackService.DisplayMessage($"Refreshed authentication by {oidcConfig.Authority}");
-                        token = result.AccessToken;
+                        token = GetBearerTokenFromResult(result, oidcConfig.BearerTokenName);
                         if (!string.IsNullOrEmpty(token))
                         {
                             tokenStatus = TokenStatus.Valid;
@@ -94,7 +95,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                     if (!result.IsError)
                     {
                         _feedbackService.DisplayMessage($"Authenticated by {oidcConfig.Authority} as {result.User.Identity?.Name}");
-                        token = result.AccessToken;
+                        token = GetBearerTokenFromResult(result, oidcConfig.BearerTokenName);
                         if (storeCredentials)
                         {
                             StoreCredentials(settings, result);
@@ -207,9 +208,21 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
             return result;
         }
 
+        private static string GetBearerTokenFromResult(dynamic authResult, string? bearerTokenOption)
+        {
+            return "id_token" == bearerTokenOption ? authResult.IdentityToken : authResult.AccessToken;
+        }
+
+        private static string GetBearerTokenFromSettings(ConnectionSettings settings, string? bearerTokenOption)
+        {
+            var paramName = "id_token" == bearerTokenOption ? ParamIdToken : ParamAccesToken;
+            return settings.AuthenticatorParams.TryGetValue(paramName, out var value) ? value : string.Empty;
+        }
+
         private static void StoreCredentials(ConnectionSettings settings, dynamic authResult)
         {
             settings.AuthenticatorParams[ParamAccesToken] = authResult.AccessToken;
+            settings.AuthenticatorParams[ParamIdToken] = authResult.IdentityToken;
             settings.AuthenticatorParams[ParamRefreshToken] = authResult.RefreshToken;
             settings.AuthenticatorParams[ParamTokenExpiration] = authResult.AccessTokenExpiration.ToString("o");
         }
