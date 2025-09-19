@@ -51,13 +51,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return result;
                 }
 
-                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
-
-                var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
+
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
 
                 DisplayMessage(string.Format(PullCmdL10n.MsgCmdStart, client.APIUrl, snapshotDir.FullPath), MessageSeparatorOption.After);
 

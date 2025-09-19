@@ -127,13 +127,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                         idsToFetch.Add(ids.Item2);
                     }
 
-                    using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
-                    var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                    var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                     if (CmdResultCode.Success != brokerStat.Code)
                     {
                         return (int)brokerStat.Code;
                     }
 
+                    using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
                     var brokerGrains = await client.PullGrains(idsToFetch, ctoken);
                     foreach (var grain in brokerGrains)
                     {

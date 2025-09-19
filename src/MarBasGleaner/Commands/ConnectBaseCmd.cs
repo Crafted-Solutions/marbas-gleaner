@@ -48,6 +48,22 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     BrokerUrl = Url!,
                     IgnoreSslErrors = IgnoreSslErrors
                 };
+
+                var builder = new UriBuilder(result.BrokerUrl);
+                if (result.BrokerUrl.AbsolutePath.EndsWith($"/{BrokerClient.ApiPrefix}"))
+                {
+                    builder.Path = builder.Path[..^BrokerClient.ApiPrefix.Length];
+                }
+                else if (result.BrokerUrl.AbsolutePath.EndsWith($"/{BrokerClient.ApiPrefix[..(BrokerClient.ApiPrefix.Length - 1)]}"))
+                {
+                    builder.Path = builder.Path[..(builder.Path.Length - BrokerClient.ApiPrefix.Length + 1)];
+                }
+                if (!builder.Path.EndsWith('/'))
+                {
+                    builder.Path += '/';
+                }
+                result.BrokerUrl = builder.Uri;
+                
                 if (AuthenticationScheme.Auto != Auth)
                 {
                     result.AuthenticatorType = AuthenticatorFactory.ResolveAuthenticatorType(Enum.GetName(Auth)!);

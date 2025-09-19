@@ -77,14 +77,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 };
                 var connection = CreateConnectionSettings();
 
-                using var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, ctoken);
-
-                var brokerStat = await ValidateBrokerConnection(client, cancellationToken: ctoken);
+                var brokerStat = await ValidateBrokerConnection(_trackingService, connection, cancellationToken: ctoken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
                 snapshot.SchemaVersion = brokerStat.Info!.SchemaVersion;
+
+                using var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, ctoken);
 
                 var anchor = anchorId.Equals(Guid.Empty) ? await client.GetGrain(PathOrId.Remove(0, $"/{SchemaDefaults.RootName}/".Length), ctoken) : await client.GetGrain(anchorId, cancellationToken: ctoken);
                 if (null == anchor)

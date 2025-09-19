@@ -47,7 +47,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
             public abstract Task<int> InvokeAsync(InvocationContext context);
 
-            protected async Task<ConnectionCheckResult> ValidateBrokerConnection(IBrokerClient client, Version? snapshotVersion = null, Guid? instanceId = null, CancellationToken cancellationToken = default)
+            protected async Task<ConnectionCheckResult> ValidateBrokerConnection(ITrackingService trackingService, ConnectionSettings settings,
+                Version? snapshotVersion = null, Guid? instanceId = null, CancellationToken cancellationToken = default)
             {
                 var result = new ConnectionCheckResult
                 {
@@ -56,10 +57,10 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 try
                 {
-                    result.Info = await client.GetSystemInfo(cancellationToken);
+                    result.Info = await trackingService.GetBrokerInfoAsync(settings, cancellationToken);
                     if (null == result.Info)
                     {
-                        ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnection, client.APIUrl));
+                        ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnection, settings.BrokerUrl));
                     }
                     else if (result.Info.Version < ConnectionSettings.MinimumAPIVersion)
                     {
@@ -80,7 +81,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     {
                         _logger.LogError(e, "Broker connection error");
                     }
-                    ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnectionException, client.APIUrl, e.Message));
+                    ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnectionException, settings.BrokerUrl, e.Message));
                 }
                 return result;
             }

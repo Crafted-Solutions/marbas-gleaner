@@ -68,8 +68,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     var connState = new ConnectionCheckResult { Code = CmdResultCode.SnapshotStateError };
                     if (ValidateConnection)
                     {
-                        using var client = await _trackingService.GetBrokerClientAsync(conn, cancellationToken: ctoken);
-                        connState = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                        connState = await ValidateBrokerConnection(_trackingService, conn, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
                     }
                     DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionURL, conn.BrokerUrl));
                     DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionAuth, string.IsNullOrEmpty(conn.Authenticator) ? Enum.GetName(AuthenticationScheme.Auto) : conn.Authenticator));

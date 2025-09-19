@@ -46,16 +46,22 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 Guid instanceId = Guid.Empty;
                 var connection = CreateConnectionSettings();
+                var brokerStat = await ValidateBrokerConnection(_trackingService, connection, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                if (CmdResultCode.Success != brokerStat.Code)
+                {
+                    return (int)brokerStat.Code;
+                }
+                if (null != brokerStat.Info)
+                {
+                    instanceId = brokerStat.Info.InstanceId;
+                }
                 using (var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, ctoken))
                 {
-                    var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
-                    if (CmdResultCode.Success != brokerStat.Code)
+                    var checks = await client.CheckGrainsExist(snapshotDir.Snapshot!.Anchor, ctoken);
+                    var failedChecks = checks.Where(x => !x.Value && x.Key != snapshotDir.Snapshot.AnchorId).Select(x => x.Key.ToString("D"));
+                    if (failedChecks.Any())
                     {
-                        return (int)brokerStat.Code;
-                    }
-                    if (null != brokerStat.Info)
-                    {
-                        instanceId = brokerStat.Info.InstanceId;
+                        return ReportError(CmdResultCode.AnchorGrainError, string.Format(ConnectCmdL10n.ErrorAnchorPath, string.Join(", ", failedChecks)));
                     }
                 }
 
