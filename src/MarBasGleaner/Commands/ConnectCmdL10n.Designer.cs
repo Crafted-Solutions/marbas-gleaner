@@ -79,6 +79,15 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Some grains ({0}) in anchor path are missing.
+        /// </summary>
+        internal static string ErrorAnchorPath {
+            get {
+                return ResourceManager.GetString("ErrorAnchorPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error connecting snapshot &apos;{0}&apos; with {1}: {2}.
         /// </summary>
         internal static string ErrorConnectException {

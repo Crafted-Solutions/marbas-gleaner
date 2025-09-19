@@ -2,6 +2,8 @@
 using CraftedSolutions.MarBasGleaner.BrokerAPI;
 using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
 using CraftedSolutions.MarBasGleaner.Json;
+using CraftedSolutions.MarBasSchema.Sys;
+using System.Net.Http;
 using System.Net.Http.Json;
 
 namespace CraftedSolutions.MarBasGleaner.Tracking
@@ -30,13 +32,12 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             }
             if (null == settings.BrokerAuthConfig)
             {
-                settings = await BootstrapConfig(settings, cancellationToken);
+                settings = await GetBootstrapConfig(settings, cancellationToken);
             }
-            var result = _httpClientFactory.CreateClient($"broker{(settings.IgnoreSslErrors ? "-lax-ssl" : string.Empty)}-client");
-            result.BaseAddress = settings.BrokerUrl;
+            var mainClient = GetBrokerHttpClient(settings);
             using var authenticator = _authenticatorFactory.CreateAuthenticator(settings);
-            await (authenticator?.AuthenticateAsync(result, settings, storeCredentials, cancellationToken) ?? Task.CompletedTask);
-            return new BrokerClient(result, _services.GetRequiredService<ILogger<BrokerClient>>());
+            await (authenticator?.AuthenticateAsync(mainClient, settings, storeCredentials, cancellationToken) ?? Task.CompletedTask);
+            return new BrokerClient(mainClient, _services.GetRequiredService<ILogger<BrokerClient>>());
         }
 
         public SnapshotDirectory GetSnapshotDirectory(string path = SnapshotDirectory.DefaultPath)
@@ -58,7 +59,29 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             return snapshot!;
         }
 
-        private async Task<ConnectionSettings> BootstrapConfig(ConnectionSettings settings, CancellationToken cancellationToken = default)
+        public async Task<IServerInfo?> GetBrokerInfoAsync(ConnectionSettings settings, CancellationToken cancellationToken = default)
+        {
+            using (var client = GetBootstrapHttpClient(settings))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+                using var resp = await client.GetAsync($"{BrokerClient.ApiPrefix}SysInfo", cancellationToken);
+                if (!BrokerClient.HandleHttpError(resp, _logger))
+                {
+                    return await resp.Content.ReadFromJsonAsync<ServerInfo>(JsonDefaults.DeserializationOptions, cancellationToken);
+                }
+                return null;
+            }
+        }
+
+        public IServerInfo? GetBrokerInfo(ConnectionSettings settings)
+        {
+            return GetBrokerInfoAsync(settings).Result;
+        }
+
+        private async Task<ConnectionSettings> GetBootstrapConfig(ConnectionSettings settings, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -83,6 +106,13 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
                 settings.BrokerAuthConfig = new BasicAuthConfig();
             }
             return settings;
+        }
+
+        private HttpClient GetBrokerHttpClient(ConnectionSettings settings)
+        {
+            var result = _httpClientFactory.CreateClient($"broker{(settings.IgnoreSslErrors ? "-lax-ssl" : string.Empty)}-client");
+            result.BaseAddress = settings.BrokerUrl;
+            return result;
         }
 
         private HttpClient GetBootstrapHttpClient(ConnectionSettings settings)

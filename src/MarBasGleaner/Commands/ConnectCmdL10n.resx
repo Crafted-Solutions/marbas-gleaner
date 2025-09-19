@@ -123,6 +123,9 @@
   <data name="CmdDesc" xml:space="preserve">
     <value>Connects a tracking snapshot with MarBas broker instance</value>
   </data>
+  <data name="ErrorAnchorPath" xml:space="preserve">
+    <value>Some grains ({0}) in anchor path are missing</value>
+  </data>
   <data name="ErrorConnectException" xml:space="preserve">
     <value>Error connecting snapshot '{0}' with {1}: {2}</value>
   </data>
