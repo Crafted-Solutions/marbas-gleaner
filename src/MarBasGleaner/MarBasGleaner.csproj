@@ -5,7 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.1.5</Version>
+    <Version>0.1.6</Version>
     <UserSecretsId>dotnet-MarBasGleaner-a1530001-ad9c-44ab-ac75-b038cd799a50</UserSecretsId>
     <StartupObject>CraftedSolutions.MarBasGleaner.Program</StartupObject>
     <AssemblyName>mbglean</AssemblyName>
@@ -32,10 +32,10 @@
   <ItemGroup>
     <PackageReference Include="CraftedSolutions.MarBasAPICore" Version="0.1.20" />
     <PackageReference Include="CraftedSolutions.MarBasSchema" Version="0.1.20" />
-    <PackageReference Include="DiffPlex" Version="1.8.0" />
+    <PackageReference Include="DiffPlex" Version="1.9.0" />
     <PackageReference Include="Duende.IdentityModel.OidcClient" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.9" />
     <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
   </ItemGroup>
 
@@ -64,6 +64,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>InfoCmdL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\LogoutCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>LogoutCmdL10n.resx</DependentUpon>
     </Compile>
     <Compile Update="Commands\PullCmdL10n.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -117,6 +122,10 @@
     <EmbeddedResource Update="Commands\InfoCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>InfoCmdL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\LogoutCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LogoutCmdL10n.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Commands\PullCmdL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>

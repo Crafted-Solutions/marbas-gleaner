@@ -87,6 +87,22 @@
         "DOTNET_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true
+    },
+    "mbglean-logout": {
+      "commandName": "Project",
+      "commandLineArgs": "logout -d ../../test/tmp/snapshot",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "mbglean-connect-with-cred": {
+      "commandName": "Project",
+      "commandLineArgs": "connect https://localhost:7277 -d ../../test/tmp/snapshot --store-credentials",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json"

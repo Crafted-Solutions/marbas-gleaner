@@ -3,7 +3,6 @@ using CraftedSolutions.MarBasGleaner.BrokerAPI;
 using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
 using CraftedSolutions.MarBasGleaner.Json;
 using CraftedSolutions.MarBasSchema.Sys;
-using System.Net.Http;
 using System.Net.Http.Json;
 
 namespace CraftedSolutions.MarBasGleaner.Tracking
@@ -33,6 +32,10 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             if (null == settings.BrokerAuthConfig)
             {
                 settings = await GetBootstrapConfig(settings, cancellationToken);
+            }
+            if (!storeCredentials && 0 < settings.AuthenticatorParams.Count)
+            {
+                storeCredentials = true;
             }
             var mainClient = GetBrokerHttpClient(settings);
             using var authenticator = _authenticatorFactory.CreateAuthenticator(settings);
@@ -79,6 +82,21 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public IServerInfo? GetBrokerInfo(ConnectionSettings settings)
         {
             return GetBrokerInfoAsync(settings).Result;
+        }
+
+        public async Task<bool> LogoutFromBrokerAsync(ConnectionSettings settings, CancellationToken cancellationToken = default)
+        {
+            if (null == settings.BrokerAuthConfig)
+            {
+                settings = await GetBootstrapConfig(settings, cancellationToken);
+            }
+            using var authenticator = _authenticatorFactory.CreateAuthenticator(settings);
+            return await (authenticator?.LogoutAsync(settings, cancellationToken) ?? Task.FromResult(false));
+        }
+
+        public bool LogoutFromBroker(ConnectionSettings settings)
+        {
+            return LogoutFromBrokerAsync(settings).Result;
         }
 
         private async Task<ConnectionSettings> GetBootstrapConfig(ConnectionSettings settings, CancellationToken cancellationToken = default)

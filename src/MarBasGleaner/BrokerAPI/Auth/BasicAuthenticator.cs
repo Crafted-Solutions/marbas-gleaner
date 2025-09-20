@@ -48,6 +48,17 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
             return Task.FromResult(Authenticate(client, settings, storeCredentials));
         }
 
+        public bool Logout(ConnectionSettings settings)
+        {
+            return LogoutAsync(settings).Result;
+        }
+
+        public Task<bool> LogoutAsync(ConnectionSettings settings, CancellationToken cancellationToken = default)
+        {
+            settings.AuthenticatorParams.Remove(ParamAuth);
+            return Task.FromResult(true);
+        }
+
         public void Dispose()
         {
             // No-op

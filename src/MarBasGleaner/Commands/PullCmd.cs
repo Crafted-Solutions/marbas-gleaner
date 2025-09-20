@@ -9,7 +9,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class PullCmd : GenericCmd
     {
-        public static readonly Option<bool> OverwriteOption = new(new[] { "-o", "--overwrite" }, PullCmdL10n.OverwriteOptionDesc);
+        public static readonly Option<bool> OverwriteOption = new(["-o", "--overwrite"], PullCmdL10n.OverwriteOptionDesc);
         public static readonly Option<bool> ForceCheckpointOption = new("--force-checkpoint", PullCmdL10n.ForceCheckpointOptionDesc);
 
         public PullCmd()
@@ -58,6 +58,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 }
 
                 using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
+                await snapshotDir.StoreLocalState(false, ctoken);
 
                 DisplayMessage(string.Format(PullCmdL10n.MsgCmdStart, client.APIUrl, snapshotDir.FullPath), MessageSeparatorOption.After);
 
