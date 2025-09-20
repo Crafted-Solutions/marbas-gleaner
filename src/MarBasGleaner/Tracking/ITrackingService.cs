@@ -11,5 +11,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         Task<IBrokerClient> GetBrokerClientAsync(ConnectionSettings settings, bool storeCredentials = true, CancellationToken cancellationToken = default);
         Task<IServerInfo?> GetBrokerInfoAsync(ConnectionSettings settings, CancellationToken cancellationToken = default);
         IServerInfo? GetBrokerInfo(ConnectionSettings settings);
+        Task<bool> LogoutFromBrokerAsync(ConnectionSettings settings, CancellationToken cancellationToken = default);
+        bool LogoutFromBroker(ConnectionSettings settings);
     }
 }

@@ -6,5 +6,7 @@
     {
         bool Authenticate(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true);
         Task<bool> AuthenticateAsync(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true, CancellationToken cancellationToken = default);
+        bool Logout(ConnectionSettings settings);
+        Task<bool> LogoutAsync(ConnectionSettings settings, CancellationToken cancellationToken = default);
     }
 }

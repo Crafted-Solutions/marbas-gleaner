@@ -8,8 +8,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class PushCmd : GenericCmd
     {
-        public static readonly Option<int> CheckpointOption = new(new[] { "-c", "--starting-checkpoint" }, () => -1, PushCmdL10n.StartingCheckpointOptionDesc);
-        public static readonly Option<DuplicatesHandlingStrategy> StrategyOption = new(new[] { "-s", "--strategy" }, () => DuplicatesHandlingStrategy.OverwriteSkipNewer, PushCmdL10n.StrategyOptionDesc);
+        public static readonly Option<int> CheckpointOption = new(["-c", "--starting-checkpoint"], () => -1, PushCmdL10n.StartingCheckpointOptionDesc);
+        public static readonly Option<DuplicatesHandlingStrategy> StrategyOption = new(["-s", "--strategy"], () => DuplicatesHandlingStrategy.OverwriteSkipNewer, PushCmdL10n.StrategyOptionDesc);
 
         public PushCmd()
             : base("push", PushCmdL10n.CmdDesc)
@@ -57,6 +57,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 }
 
                 using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
+                await snapshotDir.StoreLocalState(false, ctoken);
 
                 DisplayMessage(string.Format(PushCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
 

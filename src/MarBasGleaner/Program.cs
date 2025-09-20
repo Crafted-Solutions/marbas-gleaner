@@ -46,6 +46,7 @@ namespace CraftedSolutions.MarBasGleaner
                     })
                     .UseCommandHandler<TrackCmd, TrackCmd.Worker>()
                     .UseCommandHandler<ConnectCmd, ConnectCmd.Worker>()
+                    .UseCommandHandler<LogoutCmd, LogoutCmd.Worker>()
                     .UseCommandHandler<StatusCmd, StatusCmd.Worker>()
                     .UseCommandHandler<InfoCmd, InfoCmd.Worker>()
                     .UseCommandHandler<DiffCmd, DiffCmd.Worker>()
@@ -63,6 +64,7 @@ namespace CraftedSolutions.MarBasGleaner
             var rootCmd = new RootCommand(CommonL10n.ProgramDesc);
             rootCmd.AddCommand(new TrackCmd());
             rootCmd.AddCommand(new ConnectCmd());
+            rootCmd.AddCommand(new LogoutCmd());
             rootCmd.AddCommand(new StatusCmd());
             rootCmd.AddCommand(new InfoCmd());
             rootCmd.AddCommand(new DiffCmd());

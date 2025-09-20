@@ -9,13 +9,12 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal sealed class TrackCmd() : ConnectBaseCmd("track", TrackCmdL10n.CmdDesc)
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
             base.Setup();
             AddArgument(new Argument<string>("path-or-id", TrackCmdL10n.IdArgDesc));
-            AddOption(new Option<SnapshotScope>(new[] { "--scope", "-s" }, () => SnapshotScope.Recursive, TrackCmdL10n.ScopeOptionDesc));
-            AddOption(new Option<SourceControlFlavor>(new[] { "--scs", "-c" }, () => SourceControlFlavor.Git, string.Format(TrackCmdL10n.ScsOptionDesc, Enum.GetName(SourceControlFlavor.Git))));
+            AddOption(new Option<SnapshotScope>(["--scope", "-s"], () => SnapshotScope.Recursive, TrackCmdL10n.ScopeOptionDesc));
+            AddOption(new Option<SourceControlFlavor>(["--scs", "-c"], () => SourceControlFlavor.Git, string.Format(TrackCmdL10n.ScsOptionDesc, Enum.GetName(SourceControlFlavor.Git))));
             AddOption(new Option<Guid>("--ignore-grains", TrackCmdL10n.IgnoreGrainsOptionDesc)
             {
                 Arity = ArgumentArity.OneOrMore,

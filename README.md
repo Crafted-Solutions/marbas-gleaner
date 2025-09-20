@@ -68,6 +68,19 @@ Options:
   --adopt-checkpoint <adopt-checkpoint>  Adopt specified checkpoint (-1 for latest) as current one for this connection [default: 0]
 ```
 
+#### mbglean logout
+```
+Description:
+  Logs out broker client and deletes stored credentials from snapshot
+
+Usage:
+  mbglean logout [options]
+
+Options:
+  -d, --directory <directory>  Local directory containing tracking information [default: .]
+  -?, -h, --help               Show help and usage information
+  ```
+
 #### mbglean info
 ```
 Displays general information about a snapshot

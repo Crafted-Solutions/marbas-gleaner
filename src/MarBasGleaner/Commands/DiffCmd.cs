@@ -28,7 +28,6 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             Setup();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
             AddArgument(new Argument<Guid>("grain-ids", DiffCmdL10n.IdArgDesc)
@@ -36,7 +35,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 Arity = new ArgumentArity(1, 2)
             });
             base.Setup();
-            AddOption(new Option<CompareMode>(new[] { "--mode", "-m" }, () => CompareMode.Auto, string.Format(DiffCmdL10n.ModeArgDesc, Enum.GetName(CompareMode.Snapshot2Broker), Enum.GetName(CompareMode.Snapshot))));
+            AddOption(new Option<CompareMode>(["--mode", "-m"], () => CompareMode.Auto, string.Format(DiffCmdL10n.ModeArgDesc, Enum.GetName(CompareMode.Snapshot2Broker), Enum.GetName(CompareMode.Snapshot))));
         }
 
         internal static void DisplayDiff(IGrainTransportable source, IGrainTransportable target)
@@ -84,7 +83,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) :
             GenericCmd.Worker(trackingService, (ILogger)logger)
         {
-            public IEnumerable<Guid> GrainIds { get; set; } = Enumerable.Empty<Guid>();
+            public IEnumerable<Guid> GrainIds { get; set; } = [];
             public CompareMode Mode { get; set; } = CompareMode.Auto;
             private CompareMode SourceGrainMode => Mode & (CompareMode)~((int)(CompareMode.Broker | CompareMode.Snapshot) << 8);
             private CompareMode TargetGrainMode => CompareMode.Broker < Mode ? (CompareMode)((int)Mode >> 8) : Mode;
@@ -134,6 +133,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     }
 
                     using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
+                    await snapshotDir.StoreLocalState(false, ctoken);
+
                     var brokerGrains = await client.PullGrains(idsToFetch, ctoken);
                     foreach (var grain in brokerGrains)
                     {

@@ -47,6 +47,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 }
 
                 using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
+                await snapshotDir.StoreLocalState(false, ctoken);
 
                 DisplayMessage(string.Format(StatusCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
 
@@ -70,7 +71,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 {
                     if (null != grain)
                     {
+#pragma warning disable IDE0042 // Deconstruct variable declaration
                         var status = (snapshot: GrainTrackingStatus.Uptodate, broker: GrainTrackingStatus.Uptodate);
+#pragma warning restore IDE0042 // Deconstruct variable declaration
                         if (brokerModHash.TryGetValue(grain.Id, out IGrain? value))
                         {
                             status.broker = GrainTrackingStatus.Modified;

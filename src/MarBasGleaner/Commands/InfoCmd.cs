@@ -15,11 +15,10 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             Setup();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<bool>(new[] { "-c", "--validate-connection" }, InfoCmdL10n.ValidateConnectionDesc));
+            AddOption(new Option<bool>(["-c", "--validate-connection"], InfoCmdL10n.ValidateConnectionDesc));
         }
 
         public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
