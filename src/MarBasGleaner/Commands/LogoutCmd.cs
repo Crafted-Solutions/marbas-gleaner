@@ -1,5 +1,5 @@
 ﻿using CraftedSolutions.MarBasGleaner.Tracking;
-using System.CommandLine.Invocation;
+using diVISION.CommandLineX;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -12,17 +12,16 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
         public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
-            public override async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
-                var ctoken = context.GetCancellationToken();
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken);
 
                 var result = ValidateSnapshot(snapshotDir, true, false);
                 if (0 != result)
                 {
                     return result;
                 }
-                if (await _trackingService.LogoutFromBrokerAsync(snapshotDir.ConnectionSettings!, ctoken))
+                if (await _trackingService.LogoutFromBrokerAsync(snapshotDir.ConnectionSettings!, cancellationToken))
                 {
                     DisplayInfo(string.Format(LogoutCmdL10n.MsgCmdSuccess, snapshotDir.FullPath, snapshotDir.ConnectionSettings!.BrokerUrl));
                 }
@@ -31,7 +30,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     result = (int)CmdResultCode.AuthProviderError;
                     DisplayWarning(string.Format(LogoutCmdL10n.WarnAuthProviderLogout, snapshotDir.FullPath));
                 }
-                await snapshotDir.StoreLocalState(false, ctoken);
+                await snapshotDir.StoreLocalState(false, cancellationToken);
                 return result;
             }
         }

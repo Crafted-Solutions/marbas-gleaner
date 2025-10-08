@@ -1,7 +1,7 @@
 ﻿using CraftedSolutions.MarBasGleaner.Tracking;
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema.Transport;
-using System.CommandLine.Invocation;
+using diVISION.CommandLineX;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -17,10 +17,10 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddOption(PushCmd.CheckpointOption);
-            AddOption(PushCmd.StrategyOption);
-            AddOption(PullCmd.OverwriteOption);
-            AddOption(PullCmd.ForceCheckpointOption);
+            Add(PushCmd.CheckpointOption);
+            Add(PushCmd.StrategyOption);
+            Add(PullCmd.OverwriteOption);
+            Add(PullCmd.ForceCheckpointOption);
         }
 
         public sealed new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
@@ -30,7 +30,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             public bool Overwrite { get; set; }
             public bool ForceCheckpoint { get; set; }
 
-            public override async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
                 var pushWorker = new PushCmd.Worker(_trackingService, _logger)
                 {
@@ -38,7 +38,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     StartingCheckpoint = StartingCheckpoint,
                     Strategy = Strategy
                 };
-                var result = await pushWorker.InvokeAsync(context);
+                var result = await pushWorker.InvokeAsync(context, cancellationToken);
                 if (0 == result)
                 {
                     DisplayMessage(string.Empty, MessageSeparatorOption.Before);
@@ -48,7 +48,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                         Overwrite = Overwrite,
                         ForceCheckpoint = ForceCheckpoint
                     };
-                    result = await pullWorker.InvokeAsync(context);
+                    result = await pullWorker.InvokeAsync(context, cancellationToken);
                 }
                 return result;
             }

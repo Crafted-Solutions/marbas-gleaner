@@ -5,8 +5,8 @@ using CraftedSolutions.MarBasSchema.Transport;
 using DiffPlex;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.Text.Json;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
@@ -30,12 +30,17 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
         protected override void Setup()
         {
-            AddArgument(new Argument<Guid>("grain-ids", DiffCmdL10n.IdArgDesc)
+            Add(new Argument<IEnumerable<Guid>>("grain-ids")
             {
+                Description = DiffCmdL10n.IdArgDesc,
                 Arity = new ArgumentArity(1, 2)
             });
             base.Setup();
-            AddOption(new Option<CompareMode>(["--mode", "-m"], () => CompareMode.Auto, string.Format(DiffCmdL10n.ModeArgDesc, Enum.GetName(CompareMode.Snapshot2Broker), Enum.GetName(CompareMode.Snapshot))));
+            Add(new Option<CompareMode>("--mode", "-m")
+            {
+                DefaultValueFactory = (_) => CompareMode.Auto,
+                Description = string.Format(DiffCmdL10n.ModeArgDesc, Enum.GetName(CompareMode.Snapshot2Broker), Enum.GetName(CompareMode.Snapshot))
+            });
         }
 
         internal static void DisplayDiff(IGrainTransportable source, IGrainTransportable target)
@@ -88,10 +93,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             private CompareMode SourceGrainMode => Mode & (CompareMode)~((int)(CompareMode.Broker | CompareMode.Snapshot) << 8);
             private CompareMode TargetGrainMode => CompareMode.Broker < Mode ? (CompareMode)((int)Mode >> 8) : Mode;
 
-            public async override Task<int> InvokeAsync(InvocationContext context)
+            public async override Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
-                var ctoken = context.GetCancellationToken();
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken);
 
                 var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
@@ -126,16 +130,16 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                         idsToFetch.Add(ids.Item2);
                     }
 
-                    var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                    var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, cancellationToken);
                     if (CmdResultCode.Success != brokerStat.Code)
                     {
                         return (int)brokerStat.Code;
                     }
 
-                    using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
-                    await snapshotDir.StoreLocalState(false, ctoken);
+                    using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: cancellationToken);
+                    await snapshotDir.StoreLocalState(false, cancellationToken);
 
-                    var brokerGrains = await client.PullGrains(idsToFetch, ctoken);
+                    var brokerGrains = await client.PullGrains(idsToFetch, cancellationToken);
                     foreach (var grain in brokerGrains)
                     {
                         if (CompareMode.Broker == SourceGrainMode && grain.Id == ids.Item1)
@@ -150,11 +154,11 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 }
                 if (CompareMode.Snapshot == SourceGrainMode)
                 {
-                    grains.Item1 = await snapshotDir.LoadGrainById<GrainTransportable>(ids.Item1, cancellationToken: ctoken);
+                    grains.Item1 = await snapshotDir.LoadGrainById<GrainTransportable>(ids.Item1, cancellationToken: cancellationToken);
                 }
                 if (CompareMode.Snapshot == TargetGrainMode)
                 {
-                    grains.Item2 = await snapshotDir.LoadGrainById<GrainTransportable>(ids.Item2, cancellationToken: ctoken);
+                    grains.Item2 = await snapshotDir.LoadGrainById<GrainTransportable>(ids.Item2, cancellationToken: cancellationToken);
                 }
 
                 if (null == grains.Item1)
