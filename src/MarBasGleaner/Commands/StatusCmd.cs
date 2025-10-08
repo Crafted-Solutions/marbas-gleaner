@@ -2,8 +2,8 @@
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema.Grain;
 using CraftedSolutions.MarBasSchema.Transport;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -19,8 +19,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<bool>("--show-all", StatusCmdL10n.ShowAllOptionDesc));
-            AddOption(new Option<bool>("--assume-reset", StatusCmdL10n.AssumeResetOptionDesc));
+            Add(new Option<bool>("--show-all")
+            {
+                Description = StatusCmdL10n.ShowAllOptionDesc
+            });
+            Add(new Option<bool>("--assume-reset")
+            {
+                Description = StatusCmdL10n.AssumeResetOptionDesc
+            });
         }
 
         public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
@@ -29,10 +35,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             public bool ShowAll { get; set; }
             public bool AssumeReset { get; set; }
 
-            public override async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
-                var ctoken = context.GetCancellationToken();
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken);
 
                 var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
@@ -40,14 +45,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return result;
                 }
 
-                var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, cancellationToken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
 
-                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
-                await snapshotDir.StoreLocalState(false, ctoken);
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: cancellationToken);
+                await snapshotDir.StoreLocalState(false, cancellationToken);
 
                 DisplayMessage(string.Format(StatusCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
 
@@ -60,14 +65,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 var rootId = (Guid)snapshotDir.Snapshot?.AnchorId!;
 
                 var brokerMods = await client.ListGrains(rootId, SnapshotScope.Recursive == (snapshotDir.Snapshot.Scope & SnapshotScope.Recursive),
-                    mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: ctoken);
+                    mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: cancellationToken);
                 var brokerModHash = new Dictionary<Guid, IGrain>(brokerMods.Select(x => new KeyValuePair<Guid, IGrain>(x.Id, x)));
 
-                var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: ctoken);
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: cancellationToken);
                 var additionsToCheck = new Dictionary<Guid, IGrain>();
                 var deletionsToCheck = new Dictionary<Guid, IGrain>();
 
-                await foreach (var grain in snapshotDir.ListGrains<GrainTransportable>(cancellationToken: ctoken))
+                await foreach (var grain in snapshotDir.ListGrains<GrainTransportable>(cancellationToken: cancellationToken))
                 {
                     if (null != grain)
                     {
@@ -127,7 +132,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 if (0 < additionsToCheck.Count)
                 {
-                    var checkResults = await client.CheckGrainsExist(additionsToCheck.Keys, ctoken);
+                    var checkResults = await client.CheckGrainsExist(additionsToCheck.Keys, cancellationToken);
                     foreach (var checkResult in checkResults)
                     {
                         PrintGrainInfo(additionsToCheck[checkResult.Key], checkResult.Value ? GrainTrackingStatus.Modified : GrainTrackingStatus.New);
@@ -136,7 +141,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 if (0 < deletionsToCheck.Count)
                 {
-                    var checkResults = await client.CheckGrainsExist(deletionsToCheck.Keys, ctoken);
+                    var checkResults = await client.CheckGrainsExist(deletionsToCheck.Keys, cancellationToken);
                     foreach (var checkResult in checkResults)
                     {
                         if (!checkResult.Value)
@@ -158,10 +163,10 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 foreach (var id in conflated.Modifications)
                 {
-                    var grain = await client.GetGrain(id, false, ctoken);
+                    var grain = await client.GetGrain(id, false, cancellationToken);
                     if (null == grain)
                     {
-                        grain = await snapshotDir.LoadGrainById<GrainPlain>(id, cancellationToken: ctoken);
+                        grain = await snapshotDir.LoadGrainById<GrainPlain>(id, cancellationToken: cancellationToken);
                         PrintGrainInfo(grain ?? DeletedGrain(id), statusBroker: GrainTrackingStatus.Deleted);
                     }
                     else
@@ -171,7 +176,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 }
                 foreach (var id in conflated.Deletions)
                 {
-                    var grain = await client.GetGrain(id, false, ctoken);
+                    var grain = await client.GetGrain(id, false, cancellationToken);
                     if (null != grain)
                     {
                         PrintGrainInfo(grain, GrainTrackingStatus.Deleted);

@@ -1,7 +1,7 @@
 ﻿using CraftedSolutions.MarBasGleaner.Tracking;
 using CraftedSolutions.MarBasGleaner.UI;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -10,7 +10,11 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<int>("--adopt-checkpoint", () => 0, ConnectCmdL10n.AdoptCheckpointOptionDesc));
+            Add(new Option<int>("--adopt-checkpoint")
+            {
+                DefaultValueFactory = (_) => 0,
+                Description = ConnectCmdL10n.AdoptCheckpointOptionDesc
+            });
         }
 
         public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectBaseCmd.Worker(trackingService, (ILogger)logger)
@@ -18,15 +22,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             public int AdoptCheckpoint { get; set; } = 0;
 
 
-            public override async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
                 if (null == Url || !Url.IsAbsoluteUri)
                 {
                     return ReportError(CmdResultCode.ParameterError, string.Format(ConnectCmdL10n.ErrorURL, Url));
                 }
-                var ctoken = context.GetCancellationToken();
 
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken: ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken: cancellationToken);
                 var result = ValidateSnapshot(snapshotDir, false);
                 if (0 != result)
                 {
@@ -46,7 +49,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 Guid instanceId = Guid.Empty;
                 var connection = CreateConnectionSettings();
-                var brokerStat = await ValidateBrokerConnection(_trackingService, connection, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                var brokerStat = await ValidateBrokerConnection(_trackingService, connection, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, cancellationToken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
@@ -55,9 +58,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 {
                     instanceId = brokerStat.Info.InstanceId;
                 }
-                using (var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, ctoken))
+                using (var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, cancellationToken))
                 {
-                    var checks = await client.CheckGrainsExist(snapshotDir.Snapshot!.Anchor, ctoken);
+                    var checks = await client.CheckGrainsExist(snapshotDir.Snapshot!.Anchor, cancellationToken);
                     var failedChecks = checks.Where(x => !x.Value && x.Key != snapshotDir.Snapshot.AnchorId).Select(x => x.Key.ToString("D"));
                     if (failedChecks.Any())
                     {
@@ -67,7 +70,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 try
                 {
-                    await snapshotDir.Connect(connection, instanceId, AdoptCheckpoint, cancellationToken: ctoken);
+                    await snapshotDir.Connect(connection, instanceId, AdoptCheckpoint, cancellationToken: cancellationToken);
                     DisplayInfo(string.Format(ConnectCmdL10n.MsgCmdSuccess, Url));
                 }
                 catch (Exception e)

@@ -52,7 +52,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         [MemberNotNullWhen(true, nameof(Snapshot))]
         public bool IsSnapshot => File.Exists(Path.Combine(_fullPath, SnapshotFileName));
 
-        [MemberNotNullWhen(true, new[] { nameof(LocalCheckpoint), nameof(BrokerInstanceId), nameof(ConnectionSettings) })]
+        [MemberNotNullWhen(true, [nameof(LocalCheckpoint), nameof(BrokerInstanceId), nameof(ConnectionSettings)])]
         public bool IsConnected => File.Exists(Path.Combine(_fullPath, LocalStateFileName));
 
         [MemberNotNullWhen(true, nameof(Ignores))]
@@ -513,9 +513,13 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         [GeneratedRegex(@$"g{FileNameFieldSeparator}([^.]+)\.json", RegexOptions.Compiled)]
         private static partial Regex GrainFileNameRegEx();
 
-        private class LocalStateModel
+        private interface IModelWithPersistentCommment
         {
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "We want Comment property serialized")]
+            string Comment { get; }
+        }
+
+        private class LocalStateModel: IModelWithPersistentCommment
+        {
             public string Comment => "!!!NEVER COMMMIT THIS FILE!!!";
             public ConnectionSettings? Connection { get; set; }
             public Guid InstanceId { get; set; }

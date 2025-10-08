@@ -2,8 +2,8 @@
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema;
 using CraftedSolutions.MarBasSchema.Broker;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -12,21 +12,35 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddArgument(new Argument<string>("path-or-id", TrackCmdL10n.IdArgDesc));
-            AddOption(new Option<SnapshotScope>(["--scope", "-s"], () => SnapshotScope.Recursive, TrackCmdL10n.ScopeOptionDesc));
-            AddOption(new Option<SourceControlFlavor>(["--scs", "-c"], () => SourceControlFlavor.Git, string.Format(TrackCmdL10n.ScsOptionDesc, Enum.GetName(SourceControlFlavor.Git))));
-            AddOption(new Option<Guid>("--ignore-grains", TrackCmdL10n.IgnoreGrainsOptionDesc)
+            Add(new Argument<string>("path-or-id")
             {
+                Description = TrackCmdL10n.IdArgDesc
+            });
+            Add(new Option<SnapshotScope>("--scope", "-s")
+            {
+                DefaultValueFactory = (_) => SnapshotScope.Recursive,
+                Description = TrackCmdL10n.ScopeOptionDesc
+            });
+            Add(new Option<SourceControlFlavor>("--scs", "-c")
+            {
+                DefaultValueFactory = (_) => SourceControlFlavor.Git,
+                Description = string.Format(TrackCmdL10n.ScsOptionDesc, Enum.GetName(SourceControlFlavor.Git))
+            });
+            Add(new Option<IEnumerable<Guid>>("--ignore-grains")
+            {
+                Description = TrackCmdL10n.IgnoreGrainsOptionDesc,
                 Arity = ArgumentArity.OneOrMore,
                 AllowMultipleArgumentsPerToken = true
             });
-            AddOption(new Option<Guid>("--ignore-types", TrackCmdL10n.IgnoreTypesOptionDesc)
+            Add(new Option<IEnumerable<Guid>>("--ignore-types")
             {
+                Description = TrackCmdL10n.IgnoreTypesOptionDesc,
                 Arity = ArgumentArity.OneOrMore,
                 AllowMultipleArgumentsPerToken = true
             });
-            AddOption(new Option<string>("--ignore-type-names", TrackCmdL10n.IgnoreTypeNamesOptionDesc)
+            Add(new Option<IEnumerable<string>>("--ignore-type-names")
             {
+                Description = TrackCmdL10n.IgnoreTypeNamesOptionDesc,
                 Arity = ArgumentArity.OneOrMore,
                 AllowMultipleArgumentsPerToken = true
             });
@@ -41,13 +55,12 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             public IEnumerable<Guid>? IgnoreTypes { get; set; }
             public IEnumerable<string>? IgnoreTypeNames { get; set; }
 
-            public override async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
                 if (null == Url || !Url.IsAbsoluteUri)
                 {
                     return ReportError(CmdResultCode.ParameterError, string.Format(TrackCmdL10n.ErrorURL, Url));
                 }
-                var ctoken = context.GetCancellationToken();
 
                 var anchorId = Guid.Empty;
                 if (!PathOrId!.StartsWith($"/{SchemaDefaults.RootName}") && !Guid.TryParse(PathOrId, out anchorId))
@@ -59,7 +72,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     anchorId = SchemaDefaults.RootID;
                 }
 
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken: ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken: cancellationToken);
                 if (snapshotDir.IsSnapshot)
                 {
                     return ReportError(CmdResultCode.SnapshotStateError,
@@ -76,30 +89,30 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 };
                 var connection = CreateConnectionSettings();
 
-                var brokerStat = await ValidateBrokerConnection(_trackingService, connection, cancellationToken: ctoken);
+                var brokerStat = await ValidateBrokerConnection(_trackingService, connection, cancellationToken: cancellationToken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
                 snapshot.SchemaVersion = brokerStat.Info!.SchemaVersion;
 
-                using var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, ctoken);
+                using var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, cancellationToken);
 
-                var anchor = anchorId.Equals(Guid.Empty) ? await client.GetGrain(PathOrId.Remove(0, $"/{SchemaDefaults.RootName}/".Length), ctoken) : await client.GetGrain(anchorId, cancellationToken: ctoken);
+                var anchor = anchorId.Equals(Guid.Empty) ? await client.GetGrain(PathOrId.Remove(0, $"/{SchemaDefaults.RootName}/".Length), cancellationToken) : await client.GetGrain(anchorId, cancellationToken: cancellationToken);
                 if (null == anchor)
                 {
                     return ReportError(CmdResultCode.AnchorGrainError, string.Format(TrackCmdL10n.ErrorAnchorLoad, PathOrId));
                 }
                 var latest = anchor.MTime;
 
-                snapshot.Anchor = (await client.GetGrainPath(anchor.Id, ctoken)).Select(grain => grain.Id);
+                snapshot.Anchor = (await client.GetGrainPath(anchor.Id, cancellationToken)).Select(grain => grain.Id);
 
 
-                var grains = await client.ListGrains(anchor.Id, SnapshotScope.Recursive == (SnapshotScope.Recursive & Scope), cancellationToken: ctoken);
+                var grains = await client.ListGrains(anchor.Id, SnapshotScope.Recursive == (SnapshotScope.Recursive & Scope), cancellationToken: cancellationToken);
 
                 try
                 {
-                    await snapshotDir.Initialize(brokerStat.Info.InstanceId, snapshot, Scs, connection, ctoken);
+                    await snapshotDir.Initialize(brokerStat.Info.InstanceId, snapshot, Scs, connection, cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -113,7 +126,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 if (BuildIgnoreFilter(snapshotDir))
                 {
-                    await snapshotDir.StoreIgnores(ctoken);
+                    await snapshotDir.StoreIgnores(cancellationToken);
                 }
 
                 if (SnapshotScope.Anchor == (Scope & SnapshotScope.Anchor))
@@ -124,13 +137,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     }
                     else
                     {
-                        var anchorImp = (await client.PullGrains(new[] { anchor.Id }, ctoken)).FirstOrDefault();
+                        var anchorImp = (await client.PullGrains(new[] { anchor.Id }, cancellationToken)).FirstOrDefault();
                         if (null == anchorImp)
                         {
                             return ReportError(CmdResultCode.AnchorGrainError, string.Format(TrackCmdL10n.ErrorAnchorImport));
                         }
                         DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, anchorImp.Id, anchorImp.Path ?? "/"));
-                        await snapshotDir.StoreGrain(anchorImp, cancellationToken: ctoken);
+                        await snapshotDir.StoreGrain(anchorImp, cancellationToken: cancellationToken);
                     }
                 }
 
@@ -158,8 +171,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 for (var page = 0; page < pages; page++)
                 {
                     var block = 1 < pages ? filteredIds.Skip(page * 100).Take(100) : filteredIds;
-                    var grainsImported = await client.PullGrains(block, ctoken);
-                    await Parallel.ForEachAsync(grainsImported, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ctoken }, async (grain, token) =>
+                    var grainsImported = await client.PullGrains(block, cancellationToken);
+                    await Parallel.ForEachAsync(grainsImported, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = cancellationToken }, async (grain, token) =>
                     {
                         DisplayMessage(string.Format(TrackCmdL10n.StatusGrainPull, grain.Id, grain.Path ?? "/"));
                         await snapshotDir.StoreGrain(grain, cancellationToken: token);
@@ -168,7 +181,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 snapshotDir.LocalCheckpoint!.Latest = latest;
                 snapshot.Updated = DateTime.UtcNow;
-                await snapshotDir.StoreMetadata(cancellationToken: ctoken);
+                await snapshotDir.StoreMetadata(cancellationToken: cancellationToken);
 
                 DisplayInfo(string.Format(TrackCmdL10n.MsgCmdSuccess, Url));
                 return 0;
