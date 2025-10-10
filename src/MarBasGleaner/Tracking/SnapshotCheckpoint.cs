@@ -2,6 +2,9 @@
 {
     internal class SnapshotCheckpoint : ICloneable
     {
+        public const int OldestOrdinal = 1;
+        public const int NewestOrdinal = -1;
+
         public static readonly DateTime BuiltInGrainsMTime = new(2024, 1, 5, 0, 0, 11, DateTimeKind.Utc);
 
         public int Ordinal { get; set; } = 0;

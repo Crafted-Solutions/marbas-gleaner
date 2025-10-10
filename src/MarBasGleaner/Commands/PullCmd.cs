@@ -62,7 +62,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return (int)brokerStat.Code;
                 }
 
-                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: cancellationToken);
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken);
                 await snapshotDir.StoreLocalState(false, cancellationToken);
 
                 DisplayMessage(string.Format(PullCmdL10n.MsgCmdStart, client.APIUrl, snapshotDir.FullPath), MessageSeparatorOption.After);

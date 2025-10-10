@@ -1,4 +1,5 @@
-﻿using CraftedSolutions.MarBasGleaner.Tracking;
+﻿using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
+using CraftedSolutions.MarBasGleaner.Tracking;
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema;
 using CraftedSolutions.MarBasSchema.Broker;
@@ -96,7 +97,11 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 }
                 snapshot.SchemaVersion = brokerStat.Info!.SchemaVersion;
 
-                using var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, cancellationToken);
+                if (StoreCredentials)
+                {
+                    connection.AuthenticatorParams[IAuthenticator.ParamStoreCredentials] = "true";
+                }
+                using var client = await _trackingService.GetBrokerClientAsync(connection, cancellationToken);
 
                 var anchor = anchorId.Equals(Guid.Empty) ? await client.GetGrain(PathOrId.Remove(0, $"/{SchemaDefaults.RootName}/".Length), cancellationToken) : await client.GetGrain(anchorId, cancellationToken: cancellationToken);
                 if (null == anchor)

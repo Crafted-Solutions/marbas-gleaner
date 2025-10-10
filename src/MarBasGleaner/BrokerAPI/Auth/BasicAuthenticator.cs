@@ -14,16 +14,17 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 
         private readonly IFeedbackService _feedbackService = serviceProvider.GetRequiredService<IFeedbackService>();
 
-        public bool Authenticate(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true)
+        public bool Authenticate(HttpClient client, ConnectionSettings? settings = null)
         {
             var auth = null != settings && settings.AuthenticatorParams.TryGetValue(ParamAuth, out string? value) ? value : string.Empty;
             var authIsStored = !string.IsNullOrEmpty(auth);
+            var storeCredentials = 0 < settings?.AuthenticatorParams.Count;
             if (!authIsStored)
             {
-                var user = _feedbackService.GetText("Enter user name:");
+                var user = _feedbackService.GetText(BasicAuthenticatorL10n.PromptUserName);
                 if (!string.IsNullOrEmpty(user))
                 {
-                    using var pwd = _feedbackService.GetSecureText("Enter password:");
+                    using var pwd = _feedbackService.GetSecureText(BasicAuthenticatorL10n.PromptPassword);
                     if (0 < pwd.Length)
                     {
                         var cred = new NetworkCredential(user, pwd);
@@ -37,15 +38,16 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
             }
             if (null != settings && storeCredentials && !authIsStored)
             {
+                settings.AuthenticatorParams.Remove(IAuthenticator.ParamStoreCredentials);
                 settings.AuthenticatorParams.Add(ParamAuth, auth);
             }
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(SchemeName, auth);
             return true;
         }
 
-        public Task<bool> AuthenticateAsync(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true, CancellationToken cancellationToken = default)
+        public Task<bool> AuthenticateAsync(HttpClient client, ConnectionSettings? settings = null, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(Authenticate(client, settings, storeCredentials));
+            return Task.FromResult(Authenticate(client, settings));
         }
 
         public bool Logout(ConnectionSettings settings)

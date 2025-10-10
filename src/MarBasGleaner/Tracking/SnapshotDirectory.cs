@@ -169,7 +169,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             }
             if (0 != adoptCheckpoint)
             {
-                if (-1 == adoptCheckpoint)
+                if (SnapshotCheckpoint.NewestOrdinal == adoptCheckpoint)
                 {
                     _localState.ActiveCheckpoint = _sharedCheckpoint!;
                 }
@@ -283,13 +283,13 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             return File.Exists(Path.Combine(_fullPath, GetCheckpointFileName(checkpointNum)));
         }
 
-        public async Task AdoptCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
+        public async Task AdoptCheckpoint(int checkpointNum = SnapshotCheckpoint.NewestOrdinal, CancellationToken cancellationToken = default)
         {
             if (null == _localState)
             {
                 throw new ApplicationException("Snapshot is not connected to broker");
             }
-            if (-1 == checkpointNum)
+            if (SnapshotCheckpoint.NewestOrdinal == checkpointNum)
             {
                 _localState.ActiveCheckpoint = _sharedCheckpoint!;
             }
@@ -304,17 +304,17 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             }
         }
 
-        public async Task<SnapshotCheckpoint?> LoadCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
+        public async Task<SnapshotCheckpoint?> LoadCheckpoint(int checkpointNum = SnapshotCheckpoint.NewestOrdinal, CancellationToken cancellationToken = default)
         {
             if (!IsDirectory || cancellationToken.IsCancellationRequested)
             {
                 return null;
             }
-            if (1 > checkpointNum)
+            if (SnapshotCheckpoint.OldestOrdinal > checkpointNum)
             {
                 checkpointNum = _localState?.ActiveCheckpoint.Ordinal ?? _snapshot?.Checkpoint ?? checkpointNum;
             }
-            if (1 > checkpointNum)
+            if (SnapshotCheckpoint.OldestOrdinal > checkpointNum)
             {
                 throw new ApplicationException($"Invalid checkpoint number {checkpointNum}");
             }
@@ -326,16 +326,16 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             return result;
         }
 
-        public async Task<SnapshotCheckpoint> LoadConflatedCheckpoint(int startingWith = -1, CancellationToken cancellationToken = default)
+        public async Task<SnapshotCheckpoint> LoadConflatedCheckpoint(int startingWith = SnapshotCheckpoint.NewestOrdinal, CancellationToken cancellationToken = default)
         {
             var result = _localState?.ActiveCheckpoint.Clone(true) ?? new();
-            if (!IsDirectory || cancellationToken.IsCancellationRequested || null == SharedCheckpoint || result.IsSame(SharedCheckpoint))
+            if (!IsDirectory || cancellationToken.IsCancellationRequested || null == SharedCheckpoint || (SnapshotCheckpoint.OldestOrdinal == result.Ordinal && result.IsSame(SharedCheckpoint)))
             {
                 return result;
             }
-            if (1 > startingWith)
+            if (SnapshotCheckpoint.OldestOrdinal > startingWith)
             {
-                startingWith = Math.Max(result.Ordinal, 1);
+                startingWith = Math.Max(result.Ordinal, SnapshotCheckpoint.OldestOrdinal);
             }
             for (var i = startingWith; i <= SharedCheckpoint.Ordinal; i++)
             {
@@ -350,9 +350,9 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
                 result.Ordinal = cp.Ordinal;
                 result.Latest = cp.Latest;
             }
-            if (1 > result.Ordinal)
+            if (SnapshotCheckpoint.OldestOrdinal > result.Ordinal)
             {
-                result.Ordinal = 1;
+                result.Ordinal = SnapshotCheckpoint.OldestOrdinal;
             }
             return result;
         }

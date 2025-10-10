@@ -10,8 +10,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
     {
         public static readonly Option<int> CheckpointOption = new("--starting-checkpoint", "-c")
         {
-            DefaultValueFactory = (_) => -1,
-            Description = PushCmdL10n.StartingCheckpointOptionDesc
+            DefaultValueFactory = (_) => SnapshotCheckpoint.NewestOrdinal,
+            Description = string.Format(PushCmdL10n.StartingCheckpointOptionDesc, SnapshotCheckpoint.NewestOrdinal)
         };
         public static readonly Option<DuplicatesHandlingStrategy> StrategyOption = new("--strategy", "-s")
         {
@@ -34,7 +34,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
         public new sealed class Worker : GenericCmd.Worker
         {
-            public int StartingCheckpoint { get; set; } = -1;
+            public int StartingCheckpoint { get; set; } = SnapshotCheckpoint.NewestOrdinal;
             public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
 
             public Worker(ITrackingService trackingService, ILogger<Worker> logger)
@@ -63,13 +63,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return (int)brokerStat.Code;
                 }
 
-                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: cancellationToken);
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken);
                 await snapshotDir.StoreLocalState(false, cancellationToken);
 
                 DisplayMessage(string.Format(PushCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
 
                 var isSafeCheckpoint = snapshotDir.LocalCheckpoint!.IsSame(snapshotDir.SharedCheckpoint);
-                if (-1 < StartingCheckpoint)
+                if (SnapshotCheckpoint.NewestOrdinal < StartingCheckpoint)
                 {
                     snapshotDir.LastPushCheckpoint = StartingCheckpoint;
                 }

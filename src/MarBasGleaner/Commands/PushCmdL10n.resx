@@ -136,7 +136,7 @@
     <value>Latest checkpoint {0} has already been pushed</value>
   </data>
   <data name="StartingCheckpointOptionDesc" xml:space="preserve">
-    <value>Checkpoint number to start operation with, -1 for latest</value>
+    <value>Checkpoint number to start operation with, {0} for latest</value>
   </data>
   <data name="StatusQueueDelete" xml:space="preserve">
     <value>Grains queued for deletion:</value>

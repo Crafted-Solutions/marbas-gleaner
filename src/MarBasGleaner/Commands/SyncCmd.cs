@@ -25,7 +25,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
         public sealed new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
-            public int StartingCheckpoint { get; set; } = -1;
+            public int StartingCheckpoint { get; set; } = SnapshotCheckpoint.NewestOrdinal;
             public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
             public bool Overwrite { get; set; }
             public bool ForceCheckpoint { get; set; }

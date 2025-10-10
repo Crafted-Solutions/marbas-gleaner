@@ -108,7 +108,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     OptionResult optionResult => optionResult.Option,
                     _ => throw new NotSupportedException($"Type {result.GetType()} is not supported")
                 };
-                result.AddError($"Cannot construct {symbol.Name} from '{string.Join(' ', result.Tokens)}' due to {(string.IsNullOrEmpty(e.InnerException.Message) ? $"unexpected error: {e.InnerException}" : e.InnerException.Message)}");
+
+                result.AddError(string.Format(GenericCmdL10n.ErrorSymbolParse, symbol.Name, string.Join(' ', result.Tokens)
+                    , (string.IsNullOrEmpty(e.InnerException.Message) ? $"unexpected error: {e.InnerException}" : e.InnerException.Message)));
                 return null;
             }
         }

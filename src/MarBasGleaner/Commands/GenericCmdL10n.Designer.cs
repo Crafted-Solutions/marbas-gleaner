@@ -149,5 +149,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
                 return ResourceManager.GetString("ErrorSnapshotVersion", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot construct {0} from &apos;{1}&apos; due to {2}.
+        /// </summary>
+        internal static string ErrorSymbolParse {
+            get {
+                return ResourceManager.GetString("ErrorSymbolParse", resourceCulture);
+            }
+        }
     }
 }
