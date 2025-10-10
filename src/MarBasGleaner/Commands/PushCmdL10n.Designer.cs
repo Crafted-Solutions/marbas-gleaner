@@ -115,7 +115,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Checkpoint number to start operation with, -1 for latest.
+        ///   Looks up a localized string similar to Checkpoint number to start operation with, {0} for latest.
         /// </summary>
         internal static string StartingCheckpointOptionDesc {
             get {

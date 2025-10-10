@@ -40,6 +40,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="BrokerAPI\Auth\BasicAuthenticatorL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>BasicAuthenticatorL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="BrokerAPI\Auth\OIDCAuthenticatorL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>OIDCAuthenticatorL10n.resx</DependentUpon>
+    </Compile>
     <Compile Update="Commands\ConnectCmdL10n.Designer.cs">
       <DependentUpon>ConnectCmdL10n.resx</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -103,6 +113,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="BrokerAPI\Auth\BasicAuthenticatorL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>BasicAuthenticatorL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="BrokerAPI\Auth\OIDCAuthenticatorL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>OIDCAuthenticatorL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Update="Commands\ConnectCmdL10n.resx">
       <LastGenOutput>ConnectCmdL10n.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>

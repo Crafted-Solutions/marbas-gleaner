@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AdoptCheckpointOptionDesc" xml:space="preserve">
-    <value>Adopt specified checkpoint (-1 for latest) as current one for this connection</value>
+    <value>Adopt specified checkpoint ({0} for latest) as current one for this connection</value>
   </data>
   <data name="CmdDesc" xml:space="preserve">
     <value>Connects a tracking snapshot with MarBas broker instance</value>

@@ -56,18 +56,19 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
             _disposed = true;
         }
 
-        public bool Authenticate(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true)
+        public bool Authenticate(HttpClient client, ConnectionSettings? settings = null)
         {
-            return AuthenticateAsync(client, settings, storeCredentials).Result;
+            return AuthenticateAsync(client, settings).Result;
         }
 
-        public async Task<bool> AuthenticateAsync(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true, CancellationToken cancellationToken = default)
+        public async Task<bool> AuthenticateAsync(HttpClient client, ConnectionSettings? settings = null, CancellationToken cancellationToken = default)
         {
             if (settings?.BrokerAuthConfig is IOIDCAuthConfig oidcConfig)
             {
                 ObjectDisposedException.ThrowIf(_disposed, this);
                 var token = GetBearerTokenFromSettings(settings, oidcConfig.BearerTokenName);
                 var tokenStatus = CheckTokenStatus(settings, token);
+                var storeCredentials = 0 < settings.AuthenticatorParams.Count;
 
                 if (TokenStatus.RefreshRequired == tokenStatus && settings.AuthenticatorParams.TryGetValue(ParamRefreshToken, out var refreshToken))
                 {
@@ -78,7 +79,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                     }
                     else
                     {
-                        _feedbackService.DisplayMessage($"Refreshed authentication by {oidcConfig.Authority}");
+                        _feedbackService.DisplayMessage(string.Format(OIDCAuthenticatorL10n.MsgAuthRefreshSuccess, oidcConfig.Authority));
                         token = GetBearerTokenFromResult(result, oidcConfig.BearerTokenName);
                         if (!string.IsNullOrEmpty(token))
                         {
@@ -96,7 +97,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                     var result = await Authorize(oidcConfig, cancellationToken);
                     if (!result.IsError)
                     {
-                        _feedbackService.DisplayMessage($"Authenticated by {oidcConfig.Authority} as {result.User.Identity?.Name}");
+                        _feedbackService.DisplayMessage(string.Format(OIDCAuthenticatorL10n.MsgAuthSuccess, oidcConfig.Authority, result.User.Identity?.Name));
                         token = GetBearerTokenFromResult(result, oidcConfig.BearerTokenName);
                         if (storeCredentials)
                         {
@@ -194,7 +195,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 
         private async Task<LoginResult> Authorize(IOIDCAuthConfig config, CancellationToken cancellationToken = default)
         {
-            _feedbackService.DisplayInfo("Acquiring authorization (new browser window will open)...");
+            _feedbackService.DisplayInfo(OIDCAuthenticatorL10n.StatusAcquireAuth);
 
             var oidcClient = new OidcClient(GetOidcClientOptions(config));
             var result = await oidcClient.LoginAsync(new LoginRequest() { BrowserTimeout = _configuration.GetValue("Auth:OAuthListenerTimeout", 3 * 60) }, cancellationToken);
@@ -265,6 +266,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 
         private static void StoreCredentials(ConnectionSettings settings, dynamic authResult)
         {
+            settings.AuthenticatorParams.Remove(IAuthenticator.ParamStoreCredentials);
             settings.AuthenticatorParams[ParamAccesToken] = authResult.AccessToken;
             settings.AuthenticatorParams[ParamIdToken] = authResult.IdentityToken;
             settings.AuthenticatorParams[ParamRefreshToken] = authResult.RefreshToken;

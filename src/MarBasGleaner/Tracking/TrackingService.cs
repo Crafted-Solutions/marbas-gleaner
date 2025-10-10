@@ -18,12 +18,12 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         private readonly IHostEnvironment _environment = environment;
         private readonly ILogger<TrackingService> _logger = logger;
 
-        public IBrokerClient GetBrokerClient(ConnectionSettings settings, bool storeCredentials = true)
+        public IBrokerClient GetBrokerClient(ConnectionSettings settings)
         {
-            return GetBrokerClientAsync(settings, storeCredentials).Result;
+            return GetBrokerClientAsync(settings).Result;
         }
 
-        public async Task<IBrokerClient> GetBrokerClientAsync(ConnectionSettings settings, bool storeCredentials = true, CancellationToken cancellationToken = default)
+        public async Task<IBrokerClient> GetBrokerClientAsync(ConnectionSettings settings, CancellationToken cancellationToken = default)
         {
             if (settings.IgnoreSslErrors && !_environment.IsDevelopment())
             {
@@ -33,13 +33,9 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             {
                 settings = await GetBootstrapConfig(settings, cancellationToken);
             }
-            if (!storeCredentials && 0 < settings.AuthenticatorParams.Count)
-            {
-                storeCredentials = true;
-            }
             var mainClient = GetBrokerHttpClient(settings);
             using var authenticator = _authenticatorFactory.CreateAuthenticator(settings);
-            await (authenticator?.AuthenticateAsync(mainClient, settings, storeCredentials, cancellationToken) ?? Task.CompletedTask);
+            await (authenticator?.AuthenticateAsync(mainClient, settings, cancellationToken) ?? Task.CompletedTask);
             return new BrokerClient(mainClient, _services.GetRequiredService<ILogger<BrokerClient>>());
         }
 

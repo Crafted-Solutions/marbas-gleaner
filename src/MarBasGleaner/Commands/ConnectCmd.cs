@@ -1,4 +1,5 @@
-﻿using CraftedSolutions.MarBasGleaner.Tracking;
+﻿using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
+using CraftedSolutions.MarBasGleaner.Tracking;
 using CraftedSolutions.MarBasGleaner.UI;
 using diVISION.CommandLineX;
 using System.CommandLine;
@@ -13,7 +14,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             Add(new Option<int>("--adopt-checkpoint")
             {
                 DefaultValueFactory = (_) => 0,
-                Description = ConnectCmdL10n.AdoptCheckpointOptionDesc
+                Description = string.Format(ConnectCmdL10n.AdoptCheckpointOptionDesc, SnapshotCheckpoint.NewestOrdinal)
             });
         }
 
@@ -58,7 +59,11 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 {
                     instanceId = brokerStat.Info.InstanceId;
                 }
-                using (var client = await _trackingService.GetBrokerClientAsync(connection, StoreCredentials, cancellationToken))
+                if (StoreCredentials)
+                {
+                    connection.AuthenticatorParams[IAuthenticator.ParamStoreCredentials] = "true";
+                }
+                using (var client = await _trackingService.GetBrokerClientAsync(connection, cancellationToken))
                 {
                     var checks = await client.CheckGrainsExist(snapshotDir.Snapshot!.Anchor, cancellationToken);
                     var failedChecks = checks.Where(x => !x.Value && x.Key != snapshotDir.Snapshot.AnchorId).Select(x => x.Key.ToString("D"));

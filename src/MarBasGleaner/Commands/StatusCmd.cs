@@ -51,7 +51,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return (int)brokerStat.Code;
                 }
 
-                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: cancellationToken);
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken);
                 await snapshotDir.StoreLocalState(false, cancellationToken);
 
                 DisplayMessage(string.Format(StatusCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
@@ -68,7 +68,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: cancellationToken);
                 var brokerModHash = new Dictionary<Guid, IGrain>(brokerMods.Select(x => new KeyValuePair<Guid, IGrain>(x.Id, x)));
 
-                var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: cancellationToken);
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(SnapshotCheckpoint.OldestOrdinal, cancellationToken);
                 var additionsToCheck = new Dictionary<Guid, IGrain>();
                 var deletionsToCheck = new Dictionary<Guid, IGrain>();
 
