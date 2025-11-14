@@ -4,6 +4,7 @@ using CraftedSolutions.MarBasGleaner.Json;
 using CraftedSolutions.MarBasSchema;
 using CraftedSolutions.MarBasSchema.Broker;
 using CraftedSolutions.MarBasSchema.Grain;
+using CraftedSolutions.MarBasSchema.Transport;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -19,7 +20,6 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public const string LocalStateFileName = ".mbglocal.json";
         public const string IgnoresFileName = ".mbgignore.json";
         public const string CheckpointBaseName = ".mbgcheckpoint";
-        public const string FileNameFieldSeparator = ",";
 
         private readonly string _fullPath = Path.GetFullPath(path);
         private readonly ILogger _logger = logger;
@@ -360,7 +360,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public async Task<IList<SnapshotCheckpoint>> ListCheckpoints(CancellationToken cancellationToken = default)
         {
             var result = new SortedList<int, SnapshotCheckpoint>();
-            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"{CheckpointBaseName}{FileNameFieldSeparator}{new string('?', 8)}.json"))
+            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"{CheckpointBaseName}{GrainTransportableExtension.FileNameFieldSeparator}{new string('?', 8)}.json"))
             {
                 using (var stream = File.OpenRead(fname))
                 {
@@ -406,11 +406,11 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
                         File.Delete(Path.Combine(_fullPath, IgnoresFileName));
                     }
                     var di = new DirectoryInfo(_fullPath);
-                    foreach (var file in di.EnumerateFiles($"g{FileNameFieldSeparator}*.json*"))
+                    foreach (var file in di.EnumerateFiles($"g{GrainTransportableExtension.FileNameFieldSeparator}*.json*"))
                     {
                         file.Delete();
                     }
-                    foreach (var file in di.EnumerateFiles($"{CheckpointBaseName}{FileNameFieldSeparator}{new string('?', 8)}.json"))
+                    foreach (var file in di.EnumerateFiles($"{CheckpointBaseName}{GrainTransportableExtension.FileNameFieldSeparator}{new string('?', 8)}.json"))
                     {
                         file.Delete();
                     }
@@ -478,7 +478,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public async IAsyncEnumerable<TGrain?> ListGrains<TGrain>(Func<Guid, bool>? prefilter = null,  [EnumeratorCancellation] CancellationToken cancellationToken = default)
             where TGrain: IGrain
         {
-            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"g{FileNameFieldSeparator}*.json"))
+            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"g{GrainTransportableExtension.FileNameFieldSeparator}*.json"))
             {
                 if (false == prefilter?.Invoke(Guid.Parse(GrainFileNameRegEx().Match(fname).Groups[1].Value)))
                 {
@@ -493,9 +493,9 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
 
 
         private static string GetGrainFileName(IIdentifiable grain, bool temp = false) => GetGrainFileName(grain.Id, temp);
-        private static string GetGrainFileName(Guid id, bool temp = false) => $"g{FileNameFieldSeparator}{id:D}.json{(temp ? ".tmp" : string.Empty)}";
+        private static string GetGrainFileName(Guid id, bool temp = false) => id.MakeSerializedFileName(GrainTransportableExtension.GrainQualifier, extension: $".json{(temp ? ".tmp" : string.Empty)}");
 
-        private static string GetCheckpointFileName(int checkpointNum) => $"{CheckpointBaseName}{FileNameFieldSeparator}{checkpointNum.ToString("D8", CultureInfo.InvariantCulture)}.json";
+        private static string GetCheckpointFileName(int checkpointNum) => $"{CheckpointBaseName}{GrainTransportableExtension.FileNameFieldSeparator}{checkpointNum.ToString("D8", CultureInfo.InvariantCulture)}.json";
 
         private bool PreStoreChecks(CancellationToken cancellationToken)
         {
@@ -510,7 +510,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             return true;
         }
 
-        [GeneratedRegex(@$"g{FileNameFieldSeparator}([^.]+)\.json", RegexOptions.Compiled)]
+        [GeneratedRegex(@$"g{GrainTransportableExtension.FileNameFieldSeparator}([^.]+)\.json", RegexOptions.Compiled)]
         private static partial Regex GrainFileNameRegEx();
 
         private interface IModelWithPersistentCommment
