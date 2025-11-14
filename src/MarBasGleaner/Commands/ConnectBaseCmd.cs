@@ -1,4 +1,7 @@
 ﻿using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using CraftedSolutions.MarBasGleaner.BrokerAPI;
 using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
 using CraftedSolutions.MarBasGleaner.Tracking;
@@ -15,11 +18,27 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
         protected override void Setup()
         {
-            AddArgument(new Argument<Uri>("url", ConnectBaseCmdL10n.URLArgDesc));
+            Add(new Argument<Uri>("url")
+            {
+                Description = ConnectBaseCmdL10n.URLArgDesc,
+                CustomParser = ParseStringConstructible<Uri>
+            });
             base.Setup();
-            AddOption(new Option<AuthenticationScheme>("--auth", () => AuthenticationScheme.Auto, ConnectBaseCmdL10n.AuthOptionDesc));
-            AddOption(new Option<bool>("--ignore-ssl-errors", () => false, ConnectBaseCmdL10n.IgnoreSslErrorsOptionDesc));
-            AddOption(new Option<bool>("--store-credentials", () => false, ConnectBaseCmdL10n.StoreCredentialsOptionDesc));
+            Add(new Option<AuthenticationScheme>("--auth")
+            {
+                DefaultValueFactory = (_) => AuthenticationScheme.Auto,
+                Description = ConnectBaseCmdL10n.AuthOptionDesc
+            });
+            Add(new Option<bool>("--ignore-ssl-errors")
+            {
+                DefaultValueFactory = (_) => false,
+                Description = ConnectBaseCmdL10n.IgnoreSslErrorsOptionDesc
+            });
+            Add(new Option<bool>("--store-credentials")
+            {
+                DefaultValueFactory = (_) => false,
+                Description = ConnectBaseCmdL10n.StoreCredentialsOptionDesc
+            });
         }
 
         public abstract new class Worker : GenericCmd.Worker
@@ -48,6 +67,22 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     BrokerUrl = Url!,
                     IgnoreSslErrors = IgnoreSslErrors
                 };
+
+                var builder = new UriBuilder(result.BrokerUrl);
+                if (result.BrokerUrl.AbsolutePath.EndsWith($"/{BrokerClient.ApiPrefix}"))
+                {
+                    builder.Path = builder.Path[..^BrokerClient.ApiPrefix.Length];
+                }
+                else if (result.BrokerUrl.AbsolutePath.EndsWith($"/{BrokerClient.ApiPrefix[..(BrokerClient.ApiPrefix.Length - 1)]}"))
+                {
+                    builder.Path = builder.Path[..(builder.Path.Length - BrokerClient.ApiPrefix.Length + 1)];
+                }
+                if (!builder.Path.EndsWith('/'))
+                {
+                    builder.Path += '/';
+                }
+                result.BrokerUrl = builder.Uri;
+                
                 if (AuthenticationScheme.Auto != Auth)
                 {
                     result.AuthenticatorType = AuthenticatorFactory.ResolveAuthenticatorType(Enum.GetName(Auth)!);

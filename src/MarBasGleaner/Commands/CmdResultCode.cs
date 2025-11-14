@@ -12,6 +12,7 @@
         InstanceIdError,
         AnchorGrainError,
         SnapshotInitError,
+        AuthProviderError,
         GrainLoadError,
         BrokerPushError,
         SnapshotStatusOutofdate = 42

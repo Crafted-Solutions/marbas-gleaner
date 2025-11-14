@@ -2,8 +2,8 @@
 using CraftedSolutions.MarBasGleaner.Tracking;
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema.Grain;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -15,21 +15,22 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             Setup();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "The Setup() method is meant to be called once per lifetime")]
         protected override void Setup()
         {
             base.Setup();
-            AddOption(new Option<bool>(new[] { "-c", "--validate-connection" }, InfoCmdL10n.ValidateConnectionDesc));
+            Add(new Option<bool>("--validate-connection", "-c")
+            {
+                Description = InfoCmdL10n.ValidateConnectionDesc
+            });
         }
 
         public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
         {
             public bool ValidateConnection { get; set; } = false;
 
-            public override async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
-                var ctoken = context.GetCancellationToken();
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken);
 
                 var result = ValidateSnapshot(snapshotDir, false, false);
                 if (0 != result)
@@ -43,7 +44,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 DisplayMessage(string.Format(InfoCmdL10n.InfoSnapshotVersion, snapshot!.Version));
                 DisplayMessage(string.Format(InfoCmdL10n.InfoShanshotSchemaVersion, snapshot.SchemaVersion));
 
-                var anchor = await snapshotDir.LoadGrainById<GrainPlain>(snapshot.Anchor.First(), cancellationToken: ctoken);
+                var anchor = await snapshotDir.LoadGrainById<GrainPlain>(snapshot.Anchor.First(), cancellationToken: cancellationToken);
                 if (null == anchor)
                 {
                     DisplayMessage(string.Format(InfoCmdL10n.InfoAnchorMissing, string.Join("/", snapshot.Anchor.Reverse())));
@@ -68,8 +69,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     var connState = new ConnectionCheckResult { Code = CmdResultCode.SnapshotStateError };
                     if (ValidateConnection)
                     {
-                        using var client = await _trackingService.GetBrokerClientAsync(conn, cancellationToken: ctoken);
-                        connState = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                        connState = await ValidateBrokerConnection(_trackingService, conn, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, cancellationToken);
                     }
                     DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionURL, conn.BrokerUrl));
                     DisplayMessage(string.Format(InfoCmdL10n.InfoConnectionAuth, string.IsNullOrEmpty(conn.Authenticator) ? Enum.GetName(AuthenticationScheme.Auto) : conn.Authenticator));
@@ -90,7 +90,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 {
                     DisplayMessage(InfoCmdL10n.MsgHeadSynchronization, MessageSeparatorOption.Before | MessageSeparatorOption.After);
 
-                    var checkpoints = await snapshotDir.ListCheckpoints(ctoken);
+                    var checkpoints = await snapshotDir.ListCheckpoints(cancellationToken);
                     DisplayMessage(string.Format(InfoCmdL10n.InfoNumberCheckpoints, checkpoints.Count));
                     DisplayMessage(string.Format(InfoCmdL10n.InfoActiveCheckpoint, snapshotDir.LocalCheckpoint!.Ordinal, snapshotDir.LocalCheckpoint.Latest));
                     if (null != snapshotDir.SharedCheckpoint)

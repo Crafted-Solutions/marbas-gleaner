@@ -4,6 +4,7 @@ using Duende.IdentityModel.Client;
 using Duende.IdentityModel.OidcClient;
 using Duende.IdentityModel.OidcClient.Results;
 using System.Text;
+using System.Text.Json;
 
 namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 {
@@ -15,6 +16,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
         public const string ParamIdToken = "idToken";
         public const string ParamRefreshToken = "refreshToken";
         public const string ParamTokenExpiration = "expiration";
+        public const string ParamLoginHint = "loginHint";
 
         private readonly ILogger<OIDCAuthenticator> _logger;
         private readonly IConfiguration _configuration;
@@ -54,18 +56,19 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
             _disposed = true;
         }
 
-        public bool Authenticate(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true)
+        public bool Authenticate(HttpClient client, ConnectionSettings? settings = null)
         {
-            return AuthenticateAsync(client, settings, storeCredentials).Result;
+            return AuthenticateAsync(client, settings).Result;
         }
 
-        public async Task<bool> AuthenticateAsync(HttpClient client, ConnectionSettings? settings = null, bool storeCredentials = true, CancellationToken cancellationToken = default)
+        public async Task<bool> AuthenticateAsync(HttpClient client, ConnectionSettings? settings = null, CancellationToken cancellationToken = default)
         {
             if (settings?.BrokerAuthConfig is IOIDCAuthConfig oidcConfig)
             {
                 ObjectDisposedException.ThrowIf(_disposed, this);
                 var token = GetBearerTokenFromSettings(settings, oidcConfig.BearerTokenName);
                 var tokenStatus = CheckTokenStatus(settings, token);
+                var storeCredentials = 0 < settings.AuthenticatorParams.Count;
 
                 if (TokenStatus.RefreshRequired == tokenStatus && settings.AuthenticatorParams.TryGetValue(ParamRefreshToken, out var refreshToken))
                 {
@@ -76,7 +79,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                     }
                     else
                     {
-                        _feedbackService.DisplayMessage($"Refreshed authentication by {oidcConfig.Authority}");
+                        _feedbackService.DisplayMessage(string.Format(OIDCAuthenticatorL10n.MsgAuthRefreshSuccess, oidcConfig.Authority));
                         token = GetBearerTokenFromResult(result, oidcConfig.BearerTokenName);
                         if (!string.IsNullOrEmpty(token))
                         {
@@ -94,7 +97,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                     var result = await Authorize(oidcConfig, cancellationToken);
                     if (!result.IsError)
                     {
-                        _feedbackService.DisplayMessage($"Authenticated by {oidcConfig.Authority} as {result.User.Identity?.Name}");
+                        _feedbackService.DisplayMessage(string.Format(OIDCAuthenticatorL10n.MsgAuthSuccess, oidcConfig.Authority, result.User.Identity?.Name));
                         token = GetBearerTokenFromResult(result, oidcConfig.BearerTokenName);
                         if (storeCredentials)
                         {
@@ -109,6 +112,47 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                 }
             }
             return false;
+        }
+
+        public bool Logout(ConnectionSettings settings)
+        {
+            return LogoutAsync(settings).Result;
+        }
+
+        public async Task<bool> LogoutAsync(ConnectionSettings settings, CancellationToken cancellationToken = default)
+        {
+            var result = false;
+            if (settings.BrokerAuthConfig is IOIDCAuthConfig oidcConfig && !string.IsNullOrEmpty(oidcConfig.LogoutUrl))
+            {
+                var oidcClient = new OidcClient(GetOidcClientOptions(oidcConfig));
+
+                // WA for missing custom params in Duende
+                var state = new ExtendedLogoutParameters()
+                {
+                    ClientId = oidcConfig.ClientId
+                };
+                if (settings.AuthenticatorParams.TryGetValue(ParamLoginHint, out var loginHint) && !string.IsNullOrEmpty(loginHint))
+                {
+                    state.LogoutHint = loginHint;
+                }
+                var req = new LogoutRequest()
+                {
+                    BrowserTimeout = _configuration.GetValue("Auth:OAuthListenerTimeout", 3 * 60),
+                    State = JsonSerializer.Serialize(state)
+                };
+                if (settings.AuthenticatorParams.TryGetValue(ParamIdToken, out var idToken) && !string.IsNullOrEmpty(idToken))
+                {
+                    req.IdTokenHint = idToken;
+                }
+                var logoutResult = await oidcClient.LogoutAsync(req, cancellationToken);
+                LogAuthResult(logoutResult);
+                if (!logoutResult.IsError)
+                {
+                    result = true;
+                }
+            }
+            ClearCredentials(settings);
+            return result;
         }
 
         private TokenStatus CheckTokenStatus(ConnectionSettings settings, string? token)
@@ -151,7 +195,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 
         private async Task<LoginResult> Authorize(IOIDCAuthConfig config, CancellationToken cancellationToken = default)
         {
-            _feedbackService.DisplayInfo("Acquiring authorization (new browser window will open)...");
+            _feedbackService.DisplayInfo(OIDCAuthenticatorL10n.StatusAcquireAuth);
 
             var oidcClient = new OidcClient(GetOidcClientOptions(config));
             var result = await oidcClient.LoginAsync(new LoginRequest() { BrowserTimeout = _configuration.GetValue("Auth:OAuthListenerTimeout", 3 * 60) }, cancellationToken);
@@ -187,6 +231,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                 },
                 Browser = _authenticationHandler,
                 RedirectUri = _authenticationHandler.RedirectURL,
+                PostLogoutRedirectUri = $"{_authenticationHandler.RedirectURL}?logout=1",
                 HttpClientFactory = (options) =>
                 {
                     return _httpClient;
@@ -221,17 +266,36 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
 
         private static void StoreCredentials(ConnectionSettings settings, dynamic authResult)
         {
+            settings.AuthenticatorParams.Remove(IAuthenticator.ParamStoreCredentials);
             settings.AuthenticatorParams[ParamAccesToken] = authResult.AccessToken;
             settings.AuthenticatorParams[ParamIdToken] = authResult.IdentityToken;
             settings.AuthenticatorParams[ParamRefreshToken] = authResult.RefreshToken;
             settings.AuthenticatorParams[ParamTokenExpiration] = authResult.AccessTokenExpiration.ToString("o");
+            // MS extension for Azure
+            if (authResult is LoginResult loginResult && loginResult.User.HasClaim(x => "login_hint" == x.Type))
+            {
+                var claim = loginResult.User.FindFirst("login_hint");
+                if (null != claim)
+                {
+                    settings.AuthenticatorParams[ParamLoginHint] = claim.Value;
+                }
+            }
+        }
+
+        private static void ClearCredentials(ConnectionSettings settings)
+        {
+            settings.AuthenticatorParams.Remove(ParamAccesToken);
+            settings.AuthenticatorParams.Remove(ParamIdToken);
+            settings.AuthenticatorParams.Remove(ParamRefreshToken);
+            settings.AuthenticatorParams.Remove(ParamTokenExpiration);
+            settings.AuthenticatorParams.Remove(ParamLoginHint);
         }
 
         private void LogAuthResult(dynamic result)
         {
             if (result.IsError && _logger.IsEnabled(LogLevel.Error))
             {
-                _logger.LogError("Login error: {error} ({errDesc})", (string)result.Error, (string)result.ErrorDescription);
+                _logger.LogError("OAuth error: {error} ({errDesc})", (string)result.Error, (string)result.ErrorDescription);
                 return;
             }
             if (_logger.IsEnabled(LogLevel.Trace))
@@ -257,7 +321,6 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI.Auth
                 _logger.LogTrace("{msg}", msg.ToString());
             }
         }
-
     }
 
 }

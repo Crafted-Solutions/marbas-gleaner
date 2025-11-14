@@ -1,21 +1,31 @@
+using Duende.IdentityModel;
 using Duende.IdentityModel.OidcClient.Browser;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.WebUtilities;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 
 namespace CraftedSolutions.MarBasGleaner.UI
 {
     public class HttpListenerOptions
     {
-        public required string LoginURL { get; set; }
+        public required string AuthURL { get; set; }
         public int Port { get; set; }
         public string? CallbackPath { get; set; }
         public int? Timeout { get; set; }
+    };
+
+    public class ExtendedLogoutParameters
+    {
+        public required string ClientId { get; set; }
+        public string? LogoutHint { get; set; }
     };
 
     public class HttpAuthenticationHandler(ILogger logger, int? port = null, string? path = null) : IBrowser
@@ -45,13 +55,40 @@ namespace CraftedSolutions.MarBasGleaner.UI
 
         public async Task<BrowserResult> InvokeAsync(BrowserOptions options, CancellationToken cancellationToken = default)
         {
-            using (var listener = new LoopbackHttpListener(new()
+            var listenerOptions = new HttpListenerOptions()
             {
-                LoginURL = options.StartUrl,
+                AuthURL = options.StartUrl,
                 Port = Port,
                 CallbackPath = _path,
                 Timeout = (int)options.Timeout.TotalSeconds
-            }, _logger))
+            };
+
+            // WA for missing custom params in Duende
+            var uri = new Uri(options.StartUrl);
+            var query = QueryHelpers.ParseQuery(uri.Query);
+            if (query.ContainsKey(OidcConstants.EndSessionRequest.PostLogoutRedirectUri))
+            {
+                var stateParam = (string?)query[OidcConstants.EndSessionRequest.State];
+                if (!string.IsNullOrEmpty(stateParam))
+                {
+                    var state = JsonSerializer.Deserialize<ExtendedLogoutParameters>(stateParam);
+                    if (null != state)
+                    {
+                        var qb = new QueryBuilder(query.Where(x => OidcConstants.EndSessionRequest.State != x.Key))
+                        {
+                            { "client_id", state.ClientId }
+                        };
+                        if (!string.IsNullOrEmpty(state.LogoutHint))
+                        {
+                            qb.Add("logout_hint", state.LogoutHint);
+                        }
+                        listenerOptions.AuthURL = uri.GetComponents(UriComponents.Scheme | UriComponents.Host | UriComponents.Port | UriComponents.Path, UriFormat.UriEscaped)
+                            + qb.ToString();
+                    }
+                }
+            }
+
+            using (var listener = new LoopbackHttpListener(listenerOptions, _logger))
             {
                 await listener.Start(cancellationToken);
                 OpenBrowser(listener.Url);
@@ -110,7 +147,7 @@ namespace CraftedSolutions.MarBasGleaner.UI
         private readonly TaskCompletionSource<string> _source = new();
         private readonly string _workerUrl;
         private readonly string _controllerUrl;
-        private readonly string _loginUrl;
+        private readonly string _authUrl;
         private readonly int _timeout;
 
         private readonly ILogger _logger;
@@ -119,7 +156,7 @@ namespace CraftedSolutions.MarBasGleaner.UI
 
         public LoopbackHttpListener(HttpListenerOptions options, ILogger logger)
         {
-            _loginUrl = options.LoginURL;
+            _authUrl = options.AuthURL;
             _timeout = options.Timeout ?? DefaultTimeout;
             _logger = logger;
             var path = options.CallbackPath ?? String.Empty;
@@ -226,7 +263,7 @@ namespace CraftedSolutions.MarBasGleaner.UI
 	<title>{string.Format(HttpAuthenticationHandlerL10n.TitleLoginController, AppName)}</title>
 	<script type=""text/javascript"">
         function openWorker() {{
-            const result = window.open('{_loginUrl}', 'worker', 'width=800,height=640');
+            const result = window.open('{_authUrl}', 'worker', 'width=800,height=640');
             if (result && !result.closed) {{
                 let timer = setInterval(function() {{   
                     if (result.closed) {{  
@@ -258,7 +295,7 @@ namespace CraftedSolutions.MarBasGleaner.UI
     <script type=""text/javascript"">
         if (!worker) {{
             const elm = document.createElement('p');
-            elm.innerHTML = ""{string.Format(HttpAuthenticationHandlerL10n.HintPopupBlocker, _loginUrl)}"";
+            elm.innerHTML = ""{string.Format(HttpAuthenticationHandlerL10n.HintPopupBlocker, _authUrl)}"";
             document.body.appendChild(elm);
         }}
     </script>

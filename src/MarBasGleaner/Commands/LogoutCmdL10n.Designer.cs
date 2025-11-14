@@ -22,14 +22,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ConnectCmdL10n {
+    internal class LogoutCmdL10n {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ConnectCmdL10n() {
+        internal LogoutCmdL10n() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CraftedSolutions.MarBasGleaner.Commands.ConnectCmdL10n", typeof(ConnectCmdL10n).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CraftedSolutions.MarBasGleaner.Commands.LogoutCmdL10n", typeof(LogoutCmdL10n).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,16 +61,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adopt specified checkpoint ({0} for latest) as current one for this connection.
-        /// </summary>
-        internal static string AdoptCheckpointOptionDesc {
-            get {
-                return ResourceManager.GetString("AdoptCheckpointOptionDesc", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Connects a tracking snapshot with MarBas broker instance.
+        ///   Looks up a localized string similar to Logs out broker client and deletes stored credentials from snapshot.
         /// </summary>
         internal static string CmdDesc {
             get {
@@ -79,56 +70,20 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Some grains ({0}) in anchor path are missing.
-        /// </summary>
-        internal static string ErrorAnchorPath {
-            get {
-                return ResourceManager.GetString("ErrorAnchorPath", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error connecting snapshot &apos;{0}&apos; with {1}: {2}.
-        /// </summary>
-        internal static string ErrorConnectException {
-            get {
-                return ResourceManager.GetString("ErrorConnectException", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is already tracking &apos;{1}&apos;.
-        /// </summary>
-        internal static string ErrorConnectionState {
-            get {
-                return ResourceManager.GetString("ErrorConnectionState", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is not a recognizable absolute URI.
-        /// </summary>
-        internal static string ErrorURL {
-            get {
-                return ResourceManager.GetString("ErrorURL", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Connecting {0} with snapshot {1}.
-        /// </summary>
-        internal static string MsgCmdStart {
-            get {
-                return ResourceManager.GetString("MsgCmdStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Snapshot successfully connected to &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Snapshot {0} successfully logged out from {1}.
         /// </summary>
         internal static string MsgCmdSuccess {
             get {
                 return ResourceManager.GetString("MsgCmdSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Snapshot {0} login state was reset but request to end authentication provider session failed.
+        /// </summary>
+        internal static string WarnAuthProviderLogout {
+            get {
+                return ResourceManager.GetString("WarnAuthProviderLogout", resourceCulture);
             }
         }
     }

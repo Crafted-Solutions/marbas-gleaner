@@ -2,15 +2,21 @@
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema.Grain;
 using CraftedSolutions.MarBasSchema.Transport;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class PullCmd : GenericCmd
     {
-        public static readonly Option<bool> OverwriteOption = new(new[] { "-o", "--overwrite" }, PullCmdL10n.OverwriteOptionDesc);
-        public static readonly Option<bool> ForceCheckpointOption = new("--force-checkpoint", PullCmdL10n.ForceCheckpointOptionDesc);
+        public static readonly Option<bool> OverwriteOption = new("--overwrite", "-o")
+        {
+            Description = PullCmdL10n.OverwriteOptionDesc
+        };
+        public static readonly Option<bool> ForceCheckpointOption = new("--force-checkpoint")
+        {
+            Description = PullCmdL10n.ForceCheckpointOptionDesc
+        };
 
         public PullCmd()
             : base("pull", PullCmdL10n.CmdDesc)
@@ -21,8 +27,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddOption(OverwriteOption);
-            AddOption(ForceCheckpointOption);
+            Add(OverwriteOption);
+            Add(ForceCheckpointOption);
         }
 
         public new sealed class Worker : GenericCmd.Worker
@@ -40,10 +46,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             {
             }
 
-            public override async Task<int> InvokeAsync(InvocationContext context)
+            public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
-                var ctoken = context.GetCancellationToken();
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken);
 
                 var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
@@ -51,13 +56,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return result;
                 }
 
-                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
-
-                var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot?.SchemaVersion, snapshotDir.BrokerInstanceId, cancellationToken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
+
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken);
+                await snapshotDir.StoreLocalState(false, cancellationToken);
 
                 DisplayMessage(string.Format(PullCmdL10n.MsgCmdStart, client.APIUrl, snapshotDir.FullPath), MessageSeparatorOption.After);
 
@@ -74,10 +80,10 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 var rootId = (Guid)snapshotDir.Snapshot?.AnchorId!;
 
                 var brokerGrains = await client.ListGrains(rootId, SnapshotScope.Recursive == (SnapshotScope.Recursive & snapshotDir.Snapshot.Scope),
-                    mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: ctoken);
+                    mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: cancellationToken);
 
                 int changes = 0;
-                var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: ctoken);
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(cancellationToken: cancellationToken);
                 var pathsToCheck = new HashSet<string>();
                 var incoming = new Dictionary<Guid, (GrainTrackingStatus local, GrainTrackingStatus broker)>();
 
@@ -88,7 +94,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                         continue;
                     }
 
-                    var localGrain = await snapshotDir.LoadGrainById<GrainPlain>(brokerGrain.Id, cancellationToken: ctoken);
+                    var localGrain = await snapshotDir.LoadGrainById<GrainPlain>(brokerGrain.Id, cancellationToken: cancellationToken);
 
                     if (null == localGrain)
                     {
@@ -114,18 +120,18 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 for (var page = 0; page < pages; page++)
                 {
                     var block = 1 < pages ? incoming.Keys.Skip(page * 100).Take(100) : incoming.Keys;
-                    var imports = await client.PullGrains(block, ctoken);
+                    var imports = await client.PullGrains(block, cancellationToken);
                     foreach (var grain in imports)
                     {
                         var import = true;
                         var (localStatus, brokerStatus) = incoming[grain.Id];
                         if (GrainTrackingStatus.Modified == brokerStatus && GrainTrackingStatus.Modified == localStatus)
                         {
-                            import = await ResolveConflict(snapshotDir, grain, targetCheckpoint, ctoken);
+                            import = await ResolveConflict(snapshotDir, grain, targetCheckpoint, cancellationToken);
                         }
                         if (import)
                         {
-                            await ImportGrain(snapshotDir, grain, brokerStatus, targetCheckpoint, ctoken);
+                            await ImportGrain(snapshotDir, grain, brokerStatus, targetCheckpoint, cancellationToken);
                         }
                     }
                 }
@@ -136,14 +142,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     await foreach (var grain in snapshotDir.ListGrains<GrainTransportable>((id) =>
                         {
                             return !incoming.ContainsKey(id);
-                        }, ctoken))
+                        }, cancellationToken))
                     {
                         if (null != grain && pathsToCheck.Any((x) => !string.IsNullOrEmpty(grain.Path) && grain.Path.StartsWith(x)))
                         {
                             childrenToCheck[grain.Id] = grain;
                         }
                     }
-                    var checks = await client.CheckGrainsExist(childrenToCheck.Keys, ctoken);
+                    var checks = await client.CheckGrainsExist(childrenToCheck.Keys, cancellationToken);
 
                     foreach (var del in checks.Where(x => !x.Value))
                     {
@@ -169,8 +175,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     {
                         targetCheckpoint.InstanceId = (Guid)snapshotDir.BrokerInstanceId!;
                     }
-                    await snapshotDir.StoreCheckpoint(targetCheckpoint, true, ctoken);
-                    await snapshotDir.StoreMetadata(false, ctoken);
+                    await snapshotDir.StoreCheckpoint(targetCheckpoint, true, cancellationToken);
+                    await snapshotDir.StoreMetadata(false, cancellationToken);
 
                     DisplayMessage(string.Format(PullCmdL10n.MsgCmdSuccess, changes, targetCheckpoint.Ordinal, snapshotDir.FullPath), MessageSeparatorOption.Before);
                 }

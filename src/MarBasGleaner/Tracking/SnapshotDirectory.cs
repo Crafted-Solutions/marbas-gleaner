@@ -4,6 +4,7 @@ using CraftedSolutions.MarBasGleaner.Json;
 using CraftedSolutions.MarBasSchema;
 using CraftedSolutions.MarBasSchema.Broker;
 using CraftedSolutions.MarBasSchema.Grain;
+using CraftedSolutions.MarBasSchema.Transport;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -19,7 +20,6 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public const string LocalStateFileName = ".mbglocal.json";
         public const string IgnoresFileName = ".mbgignore.json";
         public const string CheckpointBaseName = ".mbgcheckpoint";
-        public const string FileNameFieldSeparator = ",";
 
         private readonly string _fullPath = Path.GetFullPath(path);
         private readonly ILogger _logger = logger;
@@ -52,7 +52,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         [MemberNotNullWhen(true, nameof(Snapshot))]
         public bool IsSnapshot => File.Exists(Path.Combine(_fullPath, SnapshotFileName));
 
-        [MemberNotNullWhen(true, new[] { nameof(LocalCheckpoint), nameof(BrokerInstanceId), nameof(ConnectionSettings) })]
+        [MemberNotNullWhen(true, [nameof(LocalCheckpoint), nameof(BrokerInstanceId), nameof(ConnectionSettings)])]
         public bool IsConnected => File.Exists(Path.Combine(_fullPath, LocalStateFileName));
 
         [MemberNotNullWhen(true, nameof(Ignores))]
@@ -169,7 +169,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             }
             if (0 != adoptCheckpoint)
             {
-                if (-1 == adoptCheckpoint)
+                if (SnapshotCheckpoint.NewestOrdinal == adoptCheckpoint)
                 {
                     _localState.ActiveCheckpoint = _sharedCheckpoint!;
                 }
@@ -283,13 +283,13 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             return File.Exists(Path.Combine(_fullPath, GetCheckpointFileName(checkpointNum)));
         }
 
-        public async Task AdoptCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
+        public async Task AdoptCheckpoint(int checkpointNum = SnapshotCheckpoint.NewestOrdinal, CancellationToken cancellationToken = default)
         {
             if (null == _localState)
             {
                 throw new ApplicationException("Snapshot is not connected to broker");
             }
-            if (-1 == checkpointNum)
+            if (SnapshotCheckpoint.NewestOrdinal == checkpointNum)
             {
                 _localState.ActiveCheckpoint = _sharedCheckpoint!;
             }
@@ -304,17 +304,17 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             }
         }
 
-        public async Task<SnapshotCheckpoint?> LoadCheckpoint(int checkpointNum = -1, CancellationToken cancellationToken = default)
+        public async Task<SnapshotCheckpoint?> LoadCheckpoint(int checkpointNum = SnapshotCheckpoint.NewestOrdinal, CancellationToken cancellationToken = default)
         {
             if (!IsDirectory || cancellationToken.IsCancellationRequested)
             {
                 return null;
             }
-            if (1 > checkpointNum)
+            if (SnapshotCheckpoint.OldestOrdinal > checkpointNum)
             {
                 checkpointNum = _localState?.ActiveCheckpoint.Ordinal ?? _snapshot?.Checkpoint ?? checkpointNum;
             }
-            if (1 > checkpointNum)
+            if (SnapshotCheckpoint.OldestOrdinal > checkpointNum)
             {
                 throw new ApplicationException($"Invalid checkpoint number {checkpointNum}");
             }
@@ -326,16 +326,16 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             return result;
         }
 
-        public async Task<SnapshotCheckpoint> LoadConflatedCheckpoint(int startingWith = -1, CancellationToken cancellationToken = default)
+        public async Task<SnapshotCheckpoint> LoadConflatedCheckpoint(int startingWith = SnapshotCheckpoint.NewestOrdinal, CancellationToken cancellationToken = default)
         {
             var result = _localState?.ActiveCheckpoint.Clone(true) ?? new();
-            if (!IsDirectory || cancellationToken.IsCancellationRequested || null == SharedCheckpoint || result.IsSame(SharedCheckpoint))
+            if (!IsDirectory || cancellationToken.IsCancellationRequested || null == SharedCheckpoint || (SnapshotCheckpoint.OldestOrdinal == result.Ordinal && result.IsSame(SharedCheckpoint)))
             {
                 return result;
             }
-            if (1 > startingWith)
+            if (SnapshotCheckpoint.OldestOrdinal > startingWith)
             {
-                startingWith = Math.Max(result.Ordinal, 1);
+                startingWith = Math.Max(result.Ordinal, SnapshotCheckpoint.OldestOrdinal);
             }
             for (var i = startingWith; i <= SharedCheckpoint.Ordinal; i++)
             {
@@ -350,9 +350,9 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
                 result.Ordinal = cp.Ordinal;
                 result.Latest = cp.Latest;
             }
-            if (1 > result.Ordinal)
+            if (SnapshotCheckpoint.OldestOrdinal > result.Ordinal)
             {
-                result.Ordinal = 1;
+                result.Ordinal = SnapshotCheckpoint.OldestOrdinal;
             }
             return result;
         }
@@ -360,7 +360,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public async Task<IList<SnapshotCheckpoint>> ListCheckpoints(CancellationToken cancellationToken = default)
         {
             var result = new SortedList<int, SnapshotCheckpoint>();
-            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"{CheckpointBaseName}{FileNameFieldSeparator}{new string('?', 8)}.json"))
+            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"{CheckpointBaseName}{GrainTransportableExtension.FileNameFieldSeparator}{new string('?', 8)}.json"))
             {
                 using (var stream = File.OpenRead(fname))
                 {
@@ -406,11 +406,11 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
                         File.Delete(Path.Combine(_fullPath, IgnoresFileName));
                     }
                     var di = new DirectoryInfo(_fullPath);
-                    foreach (var file in di.EnumerateFiles($"g{FileNameFieldSeparator}*.json*"))
+                    foreach (var file in di.EnumerateFiles($"g{GrainTransportableExtension.FileNameFieldSeparator}*.json*"))
                     {
                         file.Delete();
                     }
-                    foreach (var file in di.EnumerateFiles($"{CheckpointBaseName}{FileNameFieldSeparator}{new string('?', 8)}.json"))
+                    foreach (var file in di.EnumerateFiles($"{CheckpointBaseName}{GrainTransportableExtension.FileNameFieldSeparator}{new string('?', 8)}.json"))
                     {
                         file.Delete();
                     }
@@ -478,7 +478,7 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
         public async IAsyncEnumerable<TGrain?> ListGrains<TGrain>(Func<Guid, bool>? prefilter = null,  [EnumeratorCancellation] CancellationToken cancellationToken = default)
             where TGrain: IGrain
         {
-            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"g{FileNameFieldSeparator}*.json"))
+            foreach (var fname in Directory.EnumerateFiles(_fullPath, $"g{GrainTransportableExtension.FileNameFieldSeparator}*.json"))
             {
                 if (false == prefilter?.Invoke(Guid.Parse(GrainFileNameRegEx().Match(fname).Groups[1].Value)))
                 {
@@ -493,9 +493,9 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
 
 
         private static string GetGrainFileName(IIdentifiable grain, bool temp = false) => GetGrainFileName(grain.Id, temp);
-        private static string GetGrainFileName(Guid id, bool temp = false) => $"g{FileNameFieldSeparator}{id:D}.json{(temp ? ".tmp" : string.Empty)}";
+        private static string GetGrainFileName(Guid id, bool temp = false) => id.MakeSerializedFileName(GrainTransportableExtension.GrainQualifier, extension: $".json{(temp ? ".tmp" : string.Empty)}");
 
-        private static string GetCheckpointFileName(int checkpointNum) => $"{CheckpointBaseName}{FileNameFieldSeparator}{checkpointNum.ToString("D8", CultureInfo.InvariantCulture)}.json";
+        private static string GetCheckpointFileName(int checkpointNum) => $"{CheckpointBaseName}{GrainTransportableExtension.FileNameFieldSeparator}{checkpointNum.ToString("D8", CultureInfo.InvariantCulture)}.json";
 
         private bool PreStoreChecks(CancellationToken cancellationToken)
         {
@@ -510,12 +510,16 @@ namespace CraftedSolutions.MarBasGleaner.Tracking
             return true;
         }
 
-        [GeneratedRegex(@$"g{FileNameFieldSeparator}([^.]+)\.json", RegexOptions.Compiled)]
+        [GeneratedRegex(@$"g{GrainTransportableExtension.FileNameFieldSeparator}([^.]+)\.json", RegexOptions.Compiled)]
         private static partial Regex GrainFileNameRegEx();
 
-        private class LocalStateModel
+        private interface IModelWithPersistentCommment
         {
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "We want Comment property serialized")]
+            string Comment { get; }
+        }
+
+        private class LocalStateModel: IModelWithPersistentCommment
+        {
             public string Comment => "!!!NEVER COMMMIT THIS FILE!!!";
             public ConnectionSettings? Connection { get; set; }
             public Guid InstanceId { get; set; }

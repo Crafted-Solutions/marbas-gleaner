@@ -1,15 +1,23 @@
 ﻿using CraftedSolutions.MarBasGleaner.Tracking;
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema.Transport;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
     internal class PushCmd : GenericCmd
     {
-        public static readonly Option<int> CheckpointOption = new(new[] { "-c", "--starting-checkpoint" }, () => -1, PushCmdL10n.StartingCheckpointOptionDesc);
-        public static readonly Option<DuplicatesHandlingStrategy> StrategyOption = new(new[] { "-s", "--strategy" }, () => DuplicatesHandlingStrategy.OverwriteSkipNewer, PushCmdL10n.StrategyOptionDesc);
+        public static readonly Option<int> CheckpointOption = new("--starting-checkpoint", "-c")
+        {
+            DefaultValueFactory = (_) => SnapshotCheckpoint.NewestOrdinal,
+            Description = string.Format(PushCmdL10n.StartingCheckpointOptionDesc, SnapshotCheckpoint.NewestOrdinal)
+        };
+        public static readonly Option<DuplicatesHandlingStrategy> StrategyOption = new("--strategy", "-s")
+        {
+            DefaultValueFactory = (_) => DuplicatesHandlingStrategy.OverwriteSkipNewer,
+            Description = PushCmdL10n.StrategyOptionDesc
+        };
 
         public PushCmd()
             : base("push", PushCmdL10n.CmdDesc)
@@ -20,13 +28,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         protected override void Setup()
         {
             base.Setup();
-            AddOption(CheckpointOption);
-            AddOption(StrategyOption);
+            Add(CheckpointOption);
+            Add(StrategyOption);
         }
 
         public new sealed class Worker : GenericCmd.Worker
         {
-            public int StartingCheckpoint { get; set; } = -1;
+            public int StartingCheckpoint { get; set; } = SnapshotCheckpoint.NewestOrdinal;
             public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
 
             public Worker(ITrackingService trackingService, ILogger<Worker> logger)
@@ -39,10 +47,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             {
             }
 
-            public async override Task<int> InvokeAsync(InvocationContext context)
+            public async override Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
-                var ctoken = context.GetCancellationToken();
-                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, ctoken);
+                var snapshotDir = await _trackingService.GetSnapshotDirectoryAsync(Directory, cancellationToken);
 
                 var result = ValidateSnapshot(snapshotDir);
                 if (0 != result)
@@ -50,18 +57,19 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return result;
                 }
 
-                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken: ctoken);
-
-                var brokerStat = await ValidateBrokerConnection(client, snapshotDir.Snapshot!.SchemaVersion, snapshotDir.BrokerInstanceId, ctoken);
+                var brokerStat = await ValidateBrokerConnection(_trackingService, snapshotDir.ConnectionSettings!, snapshotDir.Snapshot!.SchemaVersion, snapshotDir.BrokerInstanceId, cancellationToken);
                 if (CmdResultCode.Success != brokerStat.Code)
                 {
                     return (int)brokerStat.Code;
                 }
 
+                using var client = await _trackingService.GetBrokerClientAsync(snapshotDir.ConnectionSettings!, cancellationToken);
+                await snapshotDir.StoreLocalState(false, cancellationToken);
+
                 DisplayMessage(string.Format(PushCmdL10n.MsgCmdStart, snapshotDir.FullPath, client.APIUrl), MessageSeparatorOption.After);
 
                 var isSafeCheckpoint = snapshotDir.LocalCheckpoint!.IsSame(snapshotDir.SharedCheckpoint);
-                if (-1 < StartingCheckpoint)
+                if (SnapshotCheckpoint.NewestOrdinal < StartingCheckpoint)
                 {
                     snapshotDir.LastPushCheckpoint = StartingCheckpoint;
                 }
@@ -75,14 +83,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     return result;
                 }
 
-                var conflated = await snapshotDir.LoadConflatedCheckpoint(Math.Min(snapshotDir.LastPushCheckpoint + 1, snapshotDir.SharedCheckpoint!.Ordinal), ctoken);
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(Math.Min(snapshotDir.LastPushCheckpoint + 1, snapshotDir.SharedCheckpoint!.Ordinal), cancellationToken);
 
                 var grainsToStore = new HashSet<IGrainTransportable>();
                 var grainsToDelete = conflated.Deletions;
 
                 foreach (var id in conflated.Modifications)
                 {
-                    var grain = await snapshotDir.LoadGrainById<GrainTransportable>(id, cancellationToken: ctoken);
+                    var grain = await snapshotDir.LoadGrainById<GrainTransportable>(id, cancellationToken: cancellationToken);
                     if (null == grain)
                     {
                         DisplayWarning(string.Format(PushCmdL10n.WarnGrainNotFound, id, snapshotDir.SharedCheckpoint.Ordinal));
@@ -114,7 +122,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 var hasErrors = false;
                 try
                 {
-                    var importResult = await client.PushGrains(grainsToStore, grainsToDelete, Strategy, ctoken);
+                    var importResult = await client.PushGrains(grainsToStore, grainsToDelete, Strategy, cancellationToken);
                     if (null == importResult)
                     {
                         return ReportError(CmdResultCode.BrokerPushError, string.Format(PushCmdL10n.ErrorBrokerRequest, client.APIUrl));
@@ -157,9 +165,9 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 snapshotDir.LastPushHasErrors = hasErrors;
                 if (!isSafeCheckpoint && 0 == snapshotDir.LocalCheckpoint.Ordinal)
                 {
-                    await snapshotDir.AdoptCheckpoint(cancellationToken: ctoken);
+                    await snapshotDir.AdoptCheckpoint(cancellationToken: cancellationToken);
                 }
-                await snapshotDir.StoreMetadata(false, ctoken);
+                await snapshotDir.StoreMetadata(false, cancellationToken);
 
                 return result;
             }

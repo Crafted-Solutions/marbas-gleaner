@@ -41,7 +41,7 @@ namespace CraftedSolutions.MarBasGleanerGenTests
                         }
                     }
                 }
-                Assert.IsTrue(0 < prjChecked, "No CSPROJ files found in solution");
+                Assert.IsGreaterThan(0, prjChecked, "No CSPROJ files found in solution");
             }
         }
 
@@ -57,7 +57,7 @@ namespace CraftedSolutions.MarBasGleanerGenTests
 
         private class GitHelper
         {
-            private readonly IList<BranchNode> _branches = new List<BranchNode>();
+            private readonly IList<BranchNode> _branches = [];
 
             public IEnumerable<Branch> ListBranches()
             {
@@ -69,7 +69,7 @@ namespace CraftedSolutions.MarBasGleanerGenTests
                         throw new AssertFailedException($"Git returned error {gitResp.Item1} ({gitResp.Item2})");
                     }
                     var lines = gitResp.Item2.Split(
-                        new string[] { "\r\n", "\r", "\n" },
+                        ["\r\n", "\r", "\n"],
                         StringSplitOptions.None
                     );
                     foreach (var line in lines.Where(x => 0 < x.Length))

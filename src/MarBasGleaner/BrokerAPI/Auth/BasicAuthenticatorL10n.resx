@@ -117,37 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DirectoryOpionDesc" xml:space="preserve">
-    <value>Local directory containing tracking information</value>
+  <data name="PromptPassword" xml:space="preserve">
+    <value>Enter password:</value>
   </data>
-  <data name="ErrorAPIVersion" xml:space="preserve">
-    <value>This tool requires API version {0}, while data broker reports {1}</value>
-  </data>
-  <data name="ErrorBrokerConnection" xml:space="preserve">
-    <value>Failed querying broker API at '{0}'</value>
-  </data>
-  <data name="ErrorBrokerConnectionException" xml:space="preserve">
-    <value>Connection to broker at {0} failed due to error: {1}</value>
-  </data>
-  <data name="ErrorCheckpointMissing" xml:space="preserve">
-    <value>Snapshot checkpoints are missing, delete {0} and execute 'connect' command</value>
-  </data>
-  <data name="ErrorConnectedState" xml:space="preserve">
-    <value>'{0}' is not connected to broker, execute 'connect' first</value>
-  </data>
-  <data name="ErrorInstanceId" xml:space="preserve">
-    <value>Broker instance ID {0:D} doesn't match snapshot source {1:D}</value>
-  </data>
-  <data name="ErrorReadyState" xml:space="preserve">
-    <value>'{0}' contains no tracking snapshots</value>
-  </data>
-  <data name="ErrorSchemaVersion" xml:space="preserve">
-    <value>Broker schema version {0} is incompatible with snapshot {1}</value>
-  </data>
-  <data name="ErrorSnapshotVersion" xml:space="preserve">
-    <value>Version of snapshot {0} is not supported (actual: {1}, expected {2})</value>
-  </data>
-  <data name="ErrorSymbolParse" xml:space="preserve">
-    <value>Cannot construct {0} from '{1}' due to {2}</value>
+  <data name="PromptUserName" xml:space="preserve">
+    <value>Enter user name:</value>
   </data>
 </root>

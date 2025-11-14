@@ -2,26 +2,27 @@
 using CraftedSolutions.MarBasGleaner.Tracking;
 using CraftedSolutions.MarBasGleaner.UI;
 using CraftedSolutions.MarBasSchema.Sys;
+using diVISION.CommandLineX;
 using System.CommandLine;
-using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
+using System.Reflection;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
-    internal abstract class GenericCmd : Command
+    internal abstract class GenericCmd(string name, string? description = null) : Command(name, description)
     {
-        public static readonly Option<string> DirectoryOption = new(new[] { "--directory", "-d" }, () => SnapshotDirectory.DefaultPath, GenericCmdL10n.DirectoryOpionDesc);
-
-        protected GenericCmd(string name, string? description = null)
-            : base(name, description)
+        public static readonly Option<string> DirectoryOption = new("--directory", "-d")
         {
-        }
+            DefaultValueFactory = (_) => SnapshotDirectory.DefaultPath,
+            Description = GenericCmdL10n.DirectoryOpionDesc
+        };
 
         protected virtual void Setup()
         {
             Add(DirectoryOption);
         }
 
-        public abstract class Worker : ICommandHandler
+        public abstract class Worker : ICommandAction
         {
             protected readonly ILogger _logger;
             protected readonly ITrackingService _trackingService;
@@ -40,14 +41,15 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
             public string Directory { get; set; } = SnapshotDirectory.DefaultPath;
 
-            public int Invoke(InvocationContext context)
+            public int Invoke(CommandActionContext context)
             {
                 return InvokeAsync(context).Result;
             }
 
-            public abstract Task<int> InvokeAsync(InvocationContext context);
+            public abstract Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default);
 
-            protected async Task<ConnectionCheckResult> ValidateBrokerConnection(IBrokerClient client, Version? snapshotVersion = null, Guid? instanceId = null, CancellationToken cancellationToken = default)
+            protected async Task<ConnectionCheckResult> ValidateBrokerConnection(ITrackingService trackingService, ConnectionSettings settings,
+                Version? snapshotVersion = null, Guid? instanceId = null, CancellationToken cancellationToken = default)
             {
                 var result = new ConnectionCheckResult
                 {
@@ -56,10 +58,10 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
                 try
                 {
-                    result.Info = await client.GetSystemInfo(cancellationToken);
+                    result.Info = await trackingService.GetBrokerInfoAsync(settings, cancellationToken);
                     if (null == result.Info)
                     {
-                        ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnection, client.APIUrl));
+                        ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnection, settings.BrokerUrl));
                     }
                     else if (result.Info.Version < ConnectionSettings.MinimumAPIVersion)
                     {
@@ -80,9 +82,36 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     {
                         _logger.LogError(e, "Broker connection error");
                     }
-                    ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnectionException, client.APIUrl, e.Message));
+                    ReportError(result.Code = CmdResultCode.BrokerConnectionError, string.Format(GenericCmdL10n.ErrorBrokerConnectionException, settings.BrokerUrl, e.Message));
                 }
                 return result;
+            }
+        }
+
+        internal static TResult? ParseStringConstructible<TResult>(SymbolResult result)
+            where TResult : class
+        {
+            try
+            {
+                return (TResult?)Activator.CreateInstance(typeof(TResult), result.Tokens[0].Value);
+            }
+            catch (TargetInvocationException e)
+            {
+                if (null == e.InnerException)
+                {
+                    throw;
+                }
+                Symbol symbol = result switch
+                {
+                    CommandResult commandResult => commandResult.Command,
+                    ArgumentResult argumentResult => argumentResult.Argument,
+                    OptionResult optionResult => optionResult.Option,
+                    _ => throw new NotSupportedException($"Type {result.GetType()} is not supported")
+                };
+
+                result.AddError(string.Format(GenericCmdL10n.ErrorSymbolParse, symbol.Name, string.Join(' ', result.Tokens)
+                    , (string.IsNullOrEmpty(e.InnerException.Message) ? $"unexpected error: {e.InnerException}" : e.InnerException.Message)));
+                return null;
             }
         }
 
