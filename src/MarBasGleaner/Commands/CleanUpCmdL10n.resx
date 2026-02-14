@@ -117,58 +117,100 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ChoiceConflictDiff" xml:space="preserve">
-    <value>Display differences and decide again</value>
+  <data name="AskCorrectCheckpointErrors" xml:space="preserve">
+    <value>Shall we correct checkpoint errors?</value>
   </data>
-  <data name="ChoiceConflictKeep" xml:space="preserve">
-    <value>Keep snapshot version as current</value>
+  <data name="AskDeleteGrain" xml:space="preserve">
+    <value>Remove grain {0:D} ({1}) from snapshot?</value>
   </data>
-  <data name="ChoiceConflictManual" xml:space="preserve">
-    <value>Save broker version into a temporary file and resolve conflict manually</value>
+  <data name="AskPullMissingGrain" xml:space="preserve">
+    <value>Grain {0:D} is missing in the snapshot, pull it from the broker?</value>
   </data>
-  <data name="ChoiceConflictTakeBroker" xml:space="preserve">
-    <value>Overwrite snapshot grain with the broker version</value>
+  <data name="ChoiceAddGrain" xml:space="preserve">
+    <value>Add the grain to current checkpoint</value>
+  </data>
+  <data name="ChoiceDeleteGrain" xml:space="preserve">
+    <value>Delete the snapshot grain</value>
+  </data>
+  <data name="ChoiceNoop" xml:space="preserve">
+    <value>Do nothing</value>
+  </data>
+  <data name="ChoicePullGrain" xml:space="preserve">
+    <value>Pull the grain (if exists) from the broker into snapshot</value>
   </data>
   <data name="CmdDesc" xml:space="preserve">
-    <value>Pulls modified and new grains from MarBas broker into snapshot</value>
+    <value>Cleans up snapshot directory (correcting checkpoints, deleting orphans, pulling missing grains etc.)</value>
   </data>
-  <data name="ForceCheckpointOptionDesc" xml:space="preserve">
-    <value>Create new checkpoint even when it's safe using latest existing one</value>
+  <data name="ErrorUnattendedBrokerCredentials" xml:space="preserve">
+    <value>Unattended mode requires stored broker credentials</value>
   </data>
-  <data name="MsgChooseOf4" xml:space="preserve">
-    <value>Please choose an option 1-4</value>
+  <data name="ErrorUnreparedCheckpoints" xml:space="preserve">
+    <value>Checkpoints of snapshot {0} need to be repaired yet</value>
+  </data>
+  <data name="MsgCheckpointErrors" xml:space="preserve">
+    <value>Snapshot {0} contains following checkpoint errors:{1}</value>
   </data>
   <data name="MsgCmdStart" xml:space="preserve">
-    <value>Pulling grains from {0} into snapshot {1}</value>
+    <value>Cleaning up snaphot {0}</value>
   </data>
   <data name="MsgCmdSuccess" xml:space="preserve">
-    <value>Integrated {0} changes into checkpont {1} of snapshot {2}</value>
+    <value>{0} inconsitences found and fixed in snapshot {1}, creating checkpoint #{2} (don't forget to push it)</value>
   </data>
   <data name="MsgCmdSuccessNoop" xml:space="preserve">
-    <value>Snapshot {0} is already uptodate</value>
+    <value>Snapshot {0} clean-up complete</value>
   </data>
-  <data name="OverwriteOptionDesc" xml:space="preserve">
-    <value>Always overwrite grains even newer ones when pulling into snapshot</value>
+  <data name="MsgCorruptGrain" xml:space="preserve">
+    <value>Snapshot file for grain {0:D} seems to be corrupt</value>
   </data>
-  <data name="StatusGrainConflict" xml:space="preserve">
-    <value>Both versions of grain {0:D} ({1}) have been modified (snapshot timestamp: {2:O}, broker timestamp: {3:O})</value>
+  <data name="MsgDanglingGrain" xml:space="preserve">
+    <value>Grain {0:D} ({1}) is marked as deleted but snapshot file still exists</value>
   </data>
-  <data name="StatusGrainDeleted" xml:space="preserve">
-    <value>Skipping deleted grain {0:D}</value>
+  <data name="MsgOrphanGrain" xml:space="preserve">
+    <value>Grain {0:D} ({1}) is not listed in any snapshot checkpoint</value>
   </data>
-  <data name="StatusGrainPull" xml:space="preserve">
-    <value>Pulling missing grain {0:D} ({1})</value>
+  <data name="MsgPartCheckpointsMissing" xml:space="preserve">
+    <value>- Checkpoint file(s) #{0} is/are missing</value>
   </data>
-  <data name="StatusGrainPurge" xml:space="preserve">
-    <value>Purging deleted grain {0:D} ({1})</value>
+  <data name="MsgPartLastPushedMissing" xml:space="preserve">
+    <value>- Checkpoint file #{0} for latest push is missing</value>
   </data>
-  <data name="StatusGrainStored" xml:space="preserve">
-    <value>Grain {0:D} stored to {1}</value>
+  <data name="MsgPartLatestCheckpointNotRegistered" xml:space="preserve">
+    <value>- Latest checkpoint is not registered in the snapshot</value>
   </data>
-  <data name="StatusGrainUpdate" xml:space="preserve">
-    <value>Updating grain {0:D} ({1})</value>
+  <data name="MsgPartLocalCheckpointMissing" xml:space="preserve">
+    <value>- Local checkpoint file #{0} is missing</value>
   </data>
-  <data name="WarnUnpushedCheckpoint" xml:space="preserve">
-    <value>Snapshot {0} contains unpushed checkpoints, push them first</value>
+  <data name="StatuScanningGrains" xml:space="preserve">
+    <value>Scanning grains</value>
+  </data>
+  <data name="StatusCreateMissingCheckpoint" xml:space="preserve">
+    <value>Creating missing checkpoint #{0}</value>
+  </data>
+  <data name="StatusDeleteGrain" xml:space="preserve">
+    <value>Deleting grain {0:D} ({1})</value>
+  </data>
+  <data name="StatusGrainMarkDeleted" xml:space="preserve">
+    <value>Marking grain {0:D} as deleted</value>
+  </data>
+  <data name="StatusPullGrain" xml:space="preserve">
+    <value>Pulling grain {0:D}</value>
+  </data>
+  <data name="StatusRegisterLatestCheckpoint" xml:space="preserve">
+    <value>Registering latest checkpoint #{0} with the snapshot</value>
+  </data>
+  <data name="StatusRepairLastPushed" xml:space="preserve">
+    <value>Registering checkpoint #{0} as latest push</value>
+  </data>
+  <data name="StatusRestoreLocalCheckpoint" xml:space="preserve">
+    <value>Restoring local checkpoint as #{0}</value>
+  </data>
+  <data name="StatusScanningCheckpoints" xml:space="preserve">
+    <value>Scanning checkpoints</value>
+  </data>
+  <data name="UnattendedOptionDesc" xml:space="preserve">
+    <value>In unattended mode no questions are asked, all clean-ups that can be applied safely without interactions will be applied</value>
+  </data>
+  <data name="WarnGrainNotFound" xml:space="preserve">
+    <value>Grain {0:D} not found in {1}</value>
   </data>
 </root>

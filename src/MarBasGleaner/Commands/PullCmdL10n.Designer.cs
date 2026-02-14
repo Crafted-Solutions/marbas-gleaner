@@ -61,11 +61,38 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please decide how to procede{0}   1. Keep snapshot version as current{0}   2. Overwrite snapshot grain with the broker version{0}   3. Save broker version into a temporary file and resolve conflict manually{0}   4. Display differences and decide again.
+        ///   Looks up a localized string similar to Display differences and decide again.
         /// </summary>
-        internal static string ChoiceGrainConflict {
+        internal static string ChoiceConflictDiff {
             get {
-                return ResourceManager.GetString("ChoiceGrainConflict", resourceCulture);
+                return ResourceManager.GetString("ChoiceConflictDiff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep snapshot version as current.
+        /// </summary>
+        internal static string ChoiceConflictKeep {
+            get {
+                return ResourceManager.GetString("ChoiceConflictKeep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save broker version into a temporary file and resolve conflict manually.
+        /// </summary>
+        internal static string ChoiceConflictManual {
+            get {
+                return ResourceManager.GetString("ChoiceConflictManual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overwrite snapshot grain with the broker version.
+        /// </summary>
+        internal static string ChoiceConflictTakeBroker {
+            get {
+                return ResourceManager.GetString("ChoiceConflictTakeBroker", resourceCulture);
             }
         }
         
@@ -183,6 +210,15 @@ namespace CraftedSolutions.MarBasGleaner.Commands {
         internal static string StatusGrainUpdate {
             get {
                 return ResourceManager.GetString("StatusGrainUpdate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Snapshot {0} contains unpushed checkpoints, push them first.
+        /// </summary>
+        internal static string WarnUnpushedCheckpoint {
+            get {
+                return ResourceManager.GetString("WarnUnpushedCheckpoint", resourceCulture);
             }
         }
     }

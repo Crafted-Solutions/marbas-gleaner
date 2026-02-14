@@ -5,7 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.1.6</Version>
+    <Version>0.1.7</Version>
     <UserSecretsId>dotnet-MarBasGleaner-a1530001-ad9c-44ab-ac75-b038cd799a50</UserSecretsId>
     <StartupObject>CraftedSolutions.MarBasGleaner.Program</StartupObject>
     <AssemblyName>mbglean</AssemblyName>
@@ -30,13 +30,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CraftedSolutions.MarBasAPICore" Version="0.1.21" />
-    <PackageReference Include="CraftedSolutions.MarBasSchema" Version="0.1.21" />
+    <PackageReference Include="CraftedSolutions.MarBasAPICore" Version="0.1.22" />
+    <PackageReference Include="CraftedSolutions.MarBasSchema" Version="0.1.22" />
     <PackageReference Include="DiffPlex" Version="1.9.0" />
-    <PackageReference Include="diVISION.CommandLineX" Version="0.1.0" />
-    <PackageReference Include="Duende.IdentityModel.OidcClient" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="diVISION.CommandLineX" Version="0.1.1" />
+    <PackageReference Include="Duende.IdentityModel.OidcClient" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +49,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>OIDCAuthenticatorL10n.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\CleanUpCmdL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CleanUpCmdL10n.resx</DependentUpon>
     </Compile>
     <Compile Update="Commands\ConnectCmdL10n.Designer.cs">
       <DependentUpon>ConnectCmdL10n.resx</DependentUpon>
@@ -110,6 +115,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>CommonL10n.resx</DependentUpon>
     </Compile>
+    <Compile Update="UI\ConsoleFeedbackServiceL10n.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ConsoleFeedbackServiceL10n.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -120,6 +130,10 @@
     <EmbeddedResource Update="BrokerAPI\Auth\OIDCAuthenticatorL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>OIDCAuthenticatorL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Commands\CleanUpCmdL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CleanUpCmdL10n.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Commands\ConnectCmdL10n.resx">
       <LastGenOutput>ConnectCmdL10n.Designer.cs</LastGenOutput>
@@ -168,6 +182,10 @@
     <EmbeddedResource Update="CommonL10n.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommonL10n.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="UI\ConsoleFeedbackServiceL10n.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ConsoleFeedbackServiceL10n.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

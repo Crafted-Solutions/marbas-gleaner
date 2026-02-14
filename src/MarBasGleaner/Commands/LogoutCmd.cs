@@ -1,4 +1,5 @@
 ﻿using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
 using diVISION.CommandLineX;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
@@ -10,7 +11,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             Setup();
         }
 
-        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+            : GenericCmd.Worker(trackingService, feedbackService, (ILogger)logger)
         {
             public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {

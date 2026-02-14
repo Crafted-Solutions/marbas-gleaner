@@ -23,7 +23,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             Add(PullCmd.ForceCheckpointOption);
         }
 
-        public sealed new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public sealed new class Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+            : GenericCmd.Worker(trackingService, feedbackService, (ILogger)logger)
         {
             public int StartingCheckpoint { get; set; } = SnapshotCheckpoint.NewestOrdinal;
             public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
@@ -32,7 +33,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
             public override async Task<int> InvokeAsync(CommandActionContext context, CancellationToken cancellationToken = default)
             {
-                var pushWorker = new PushCmd.Worker(_trackingService, _logger)
+                var pushWorker = new PushCmd.Worker(_trackingService, _feedbackService, _logger)
                 {
                     Directory = Directory,
                     StartingCheckpoint = StartingCheckpoint,
@@ -42,7 +43,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 if (0 == result)
                 {
                     DisplayMessage(string.Empty, MessageSeparatorOption.Before);
-                    var pullWorker = new PullCmd.Worker(_trackingService, _logger)
+                    var pullWorker = new PullCmd.Worker(_trackingService, _feedbackService, _logger)
                     {
                         Directory = Directory,
                         Overwrite = Overwrite,

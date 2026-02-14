@@ -37,13 +37,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             public int StartingCheckpoint { get; set; } = SnapshotCheckpoint.NewestOrdinal;
             public DuplicatesHandlingStrategy Strategy { get; set; } = DuplicatesHandlingStrategy.OverwriteSkipNewer;
 
-            public Worker(ITrackingService trackingService, ILogger<Worker> logger)
-                : this(trackingService, (ILogger)logger)
+            public Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+                : this(trackingService, feedbackService, (ILogger)logger)
             {
             }
 
-            internal Worker(ITrackingService trackingService, ILogger logger)
-                : base(trackingService, logger)
+            internal Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger logger)
+                : base(trackingService, feedbackService, logger)
             {
             }
 
