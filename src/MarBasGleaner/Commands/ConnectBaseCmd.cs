@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using CraftedSolutions.MarBasGleaner.BrokerAPI;
 using CraftedSolutions.MarBasGleaner.BrokerAPI.Auth;
 using CraftedSolutions.MarBasGleaner.Tracking;
+using CraftedSolutions.MarBasGleaner.UI;
 
 namespace CraftedSolutions.MarBasGleaner.Commands
 {
@@ -43,14 +44,14 @@ namespace CraftedSolutions.MarBasGleaner.Commands
 
         public abstract new class Worker : GenericCmd.Worker
         {
-            public Worker(ITrackingService trackingService, ILogger<Worker> logger)
-                : base(trackingService, (ILogger)logger)
+            public Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+                : base(trackingService, feedbackService, (ILogger)logger)
             {
 
             }
 
-            protected Worker(ITrackingService trackingService, ILogger logger)
-                : base(trackingService, logger)
+            protected Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger logger)
+                : base(trackingService, feedbackService, logger)
             {
             }
 

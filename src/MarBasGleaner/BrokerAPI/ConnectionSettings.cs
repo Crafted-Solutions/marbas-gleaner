@@ -7,6 +7,7 @@ namespace CraftedSolutions.MarBasGleaner.BrokerAPI
     internal class ConnectionSettings
     {
         public static readonly Version MinimumAPIVersion = new(0, 1, 19);
+        public const string ParamSessionOnly = "sessionOnly";
 
         public required Uri BrokerUrl { get; set; }
         public bool IgnoreSslErrors { get; set; } = false;

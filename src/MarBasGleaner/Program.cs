@@ -53,7 +53,8 @@ namespace CraftedSolutions.MarBasGleaner
                 .UseCommandWithAction<DiffCmd.Worker>(rootCmd, new DiffCmd())
                 .UseCommandWithAction<PullCmd.Worker>(rootCmd, new PullCmd())
                 .UseCommandWithAction<PushCmd.Worker>(rootCmd, new PushCmd())
-                .UseCommandWithAction<SyncCmd.Worker>(rootCmd, new SyncCmd());
+                .UseCommandWithAction<SyncCmd.Worker>(rootCmd, new SyncCmd())
+                .UseCommandWithAction<CleanUpCmd.Worker>(rootCmd, new CleanUpCmd());
 
             using var host = builder.Build();
 

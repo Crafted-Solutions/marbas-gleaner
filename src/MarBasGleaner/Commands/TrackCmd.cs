@@ -47,7 +47,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             });
         }
 
-        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectBaseCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+            : ConnectBaseCmd.Worker(trackingService, feedbackService, (ILogger)logger)
         {
             public string? PathOrId { get; set; }
             public SnapshotScope Scope { get; set; } = SnapshotScope.Recursive;

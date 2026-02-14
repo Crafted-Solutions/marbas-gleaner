@@ -29,7 +29,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             });
         }
 
-        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+            : GenericCmd.Worker(trackingService, feedbackService, (ILogger)logger)
         {
 
             public bool ShowAll { get; set; }
@@ -68,7 +69,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     mtimeFrom: snapshotDir.LocalCheckpoint.Latest, includeParent: SnapshotScope.Anchor == (SnapshotScope.Anchor & snapshotDir.Snapshot.Scope), cancellationToken: cancellationToken);
                 var brokerModHash = new Dictionary<Guid, IGrain>(brokerMods.Select(x => new KeyValuePair<Guid, IGrain>(x.Id, x)));
 
-                var conflated = await snapshotDir.LoadConflatedCheckpoint(SnapshotCheckpoint.OldestOrdinal, cancellationToken);
+                var conflated = await snapshotDir.LoadConflatedCheckpoint(SnapshotCheckpoint.BaseOrdinal, cancellationToken);
                 var additionsToCheck = new Dictionary<Guid, IGrain>();
                 var deletionsToCheck = new Dictionary<Guid, IGrain>();
 
@@ -135,7 +136,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     var checkResults = await client.CheckGrainsExist(additionsToCheck.Keys, cancellationToken);
                     foreach (var checkResult in checkResults)
                     {
-                        PrintGrainInfo(additionsToCheck[checkResult.Key], checkResult.Value ? GrainTrackingStatus.Modified : GrainTrackingStatus.New);
+                        result = PrintGrainInfo(additionsToCheck[checkResult.Key], checkResult.Value ? GrainTrackingStatus.Modified : GrainTrackingStatus.New) | result;
                     }
                 }
 
@@ -146,7 +147,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     {
                         if (!checkResult.Value)
                         {
-                            PrintGrainInfo(deletionsToCheck[checkResult.Key], statusBroker: GrainTrackingStatus.Deleted);
+                            result = PrintGrainInfo(deletionsToCheck[checkResult.Key], statusBroker: GrainTrackingStatus.Deleted) | result;
                         }
                     }
                 }
@@ -167,11 +168,11 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     if (null == grain)
                     {
                         grain = await snapshotDir.LoadGrainById<GrainPlain>(id, cancellationToken: cancellationToken);
-                        PrintGrainInfo(grain ?? DeletedGrain(id), statusBroker: GrainTrackingStatus.Deleted);
+                        result = PrintGrainInfo(grain ?? DeletedGrain(id), statusBroker: GrainTrackingStatus.Deleted) | result;
                     }
                     else
                     {
-                        PrintGrainInfo(grain, GrainTrackingStatus.Missing);
+                        result = PrintGrainInfo(grain, GrainTrackingStatus.Missing) | result;
                     }
                 }
                 foreach (var id in conflated.Deletions)
@@ -179,13 +180,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     var grain = await client.GetGrain(id, false, cancellationToken);
                     if (null != grain)
                     {
-                        PrintGrainInfo(grain, GrainTrackingStatus.Deleted);
+                        result = PrintGrainInfo(grain, GrainTrackingStatus.Deleted) | result;
                     }
                 }
 
                 foreach (var entry in brokerModHash)
                 {
-                    PrintGrainInfo(entry.Value, statusBroker: snapshotDir.IsIgnoredGrain(entry.Value) ? GrainTrackingStatus.Ignored : GrainTrackingStatus.New);
+                    result = PrintGrainInfo(entry.Value, statusBroker: snapshotDir.IsIgnoredGrain(entry.Value) ? GrainTrackingStatus.Ignored : GrainTrackingStatus.New) | result;
                 }
                 if (0 == result)
                 {
@@ -208,11 +209,16 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 return result;
             }
 
-            private void PrintGrainInfo(IGrain grain, GrainTrackingStatus statusSnapshot = GrainTrackingStatus.Uptodate, GrainTrackingStatus statusBroker = GrainTrackingStatus.Uptodate)
+            private int PrintGrainInfo(IGrain grain, GrainTrackingStatus statusSnapshot = GrainTrackingStatus.Uptodate, GrainTrackingStatus statusBroker = GrainTrackingStatus.Uptodate)
             {
+                var result = 0;
                 if (ShowAll || GrainTrackingStatus.Uptodate < (statusSnapshot | statusBroker))
                 {
                     var mod = GrainTrackingStatus.Uptodate < (statusSnapshot | statusBroker);
+                    if (mod)
+                    {
+                        result = (int)CmdResultCode.SnapshotStatusOutofdate;
+                    }
                     try
                     {
                         if (GrainTrackingStatus.Uptodate < statusSnapshot && GrainTrackingStatus.Uptodate < statusBroker)
@@ -258,6 +264,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                         }
                     }
                 }
+                return result;
             }
 
             private static string GetStatusIndicator(GrainTrackingStatus status)

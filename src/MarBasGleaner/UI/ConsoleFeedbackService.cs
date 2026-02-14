@@ -1,11 +1,13 @@
 using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CraftedSolutions.MarBasGleaner.UI
 {
     public class ConsoleFeedbackService : IFeedbackService
     {
         public static readonly string SeparatorLine = new('-', 50);
+        private static readonly Regex YesNoPattern = new(ConsoleFeedbackServiceL10n.PatternYesNo, RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public void DisplayError(string message)
         {
@@ -132,6 +134,65 @@ namespace CraftedSolutions.MarBasGleaner.UI
                 }
             }
             Console.Write(Environment.NewLine);
+            return result;
+        }
+
+        public int GetChoice(string? promtOverride = null, int defaultChoice = -1, params string[] options)
+        {
+            var result = defaultChoice;
+            if (0 < options.Length)
+            {
+                var prompt = string.Format(promtOverride ?? ConsoleFeedbackServiceL10n.MsgChooseOption, 1, options.Length + 1);
+                if (-1 < defaultChoice)
+                {
+                    prompt += $" {string.Format(ConsoleFeedbackServiceL10n.MsgEnterDefault, defaultChoice + 1)}";
+                }
+                var buff = new StringBuilder(prompt);
+                buff.Append(Environment.NewLine);
+                for (var i = 0; i < options.Length; i++)
+                {
+                    buff.Append(i + 1);
+                    buff.Append(". ");
+                    buff.Append(options[i]);
+                    buff.Append(Environment.NewLine);
+                }
+                DisplayMessage(buff.ToString());
+
+                var answer = Console.ReadLine();
+                if (-1 < defaultChoice && 0 == answer?.Trim().Length)
+                {
+                    return result;
+                }
+
+                int choice;
+                while (!int.TryParse(answer, out choice) || 1 > choice || choice > options.Length)
+                {
+                    DisplayMessage(prompt);
+                }
+                result = choice - 1;
+            }
+            return result;
+        }
+
+        public bool AskYesNo(string prompt, bool defaultAnswer = false)
+        {
+            var result = defaultAnswer;
+            var answer = ReadText(string.Format("{0} {1}):", prompt, ConsoleFeedbackServiceL10n.MsgYesNo));
+            if (null != answer)
+            {
+                var m = YesNoPattern.Match(answer);
+                if (m.Success)
+                {
+                    for (var i = m.Groups.Count - 1; i >= 0; i--)
+                    {
+                        if (m.Groups[i].Success)
+                        {
+                            result = "Confirm" == m.Groups[i].Name;
+                            break;
+                        }
+                    }
+                }
+            }
             return result;
         }
     }

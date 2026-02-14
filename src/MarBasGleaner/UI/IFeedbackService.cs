@@ -16,6 +16,8 @@ namespace CraftedSolutions.MarBasGleaner.UI
         void DisplayMessage(string message, MessageSeparatorOption separatorOption = MessageSeparatorOption.None);
         string? GetText(string prompt, string? defaultValue = null);
         SecureString GetSecureText(string prompt);
+        int GetChoice(string? promtOverride = null, int defaultChoice = -1, params string[] options);
+        bool AskYesNo(string prompt, bool defaultAnswer = false);
     }
 
 }
