@@ -18,7 +18,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             });
         }
 
-        public new class Worker(ITrackingService trackingService, ILogger<Worker> logger) : ConnectBaseCmd.Worker(trackingService, (ILogger)logger)
+        public new class Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+            : ConnectBaseCmd.Worker(trackingService, feedbackService, (ILogger)logger)
         {
             public int AdoptCheckpoint { get; set; } = 0;
 

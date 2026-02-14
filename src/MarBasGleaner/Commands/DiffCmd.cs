@@ -80,13 +80,13 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             }
             else
             {
-                DisplayInfo(DiffCmdL10n.MsgCmdSuccessNoop);
+                ConsoleFeedbackService.WriteInfo(DiffCmdL10n.MsgCmdSuccessNoop);
             }
             Console.ResetColor();
         }
 
-        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) :
-            GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger) :
+            GenericCmd.Worker(trackingService, feedbackService, (ILogger)logger)
         {
             public IEnumerable<Guid> GrainIds { get; set; } = [];
             public CompareMode Mode { get; set; } = CompareMode.Auto;

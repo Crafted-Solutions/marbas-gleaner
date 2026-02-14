@@ -24,7 +24,8 @@ namespace CraftedSolutions.MarBasGleaner.Commands
             });
         }
 
-        public new sealed class Worker(ITrackingService trackingService, ILogger<Worker> logger) : GenericCmd.Worker(trackingService, (ILogger)logger)
+        public new sealed class Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
+            : GenericCmd.Worker(trackingService, feedbackService, (ILogger)logger)
         {
             public bool ValidateConnection { get; set; } = false;
 
@@ -90,7 +91,7 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 {
                     DisplayMessage(InfoCmdL10n.MsgHeadSynchronization, MessageSeparatorOption.Before | MessageSeparatorOption.After);
 
-                    var checkpoints = await snapshotDir.ListCheckpoints(cancellationToken);
+                    var checkpoints = await snapshotDir.ListCheckpoints(cancellationToken: cancellationToken);
                     DisplayMessage(string.Format(InfoCmdL10n.InfoNumberCheckpoints, checkpoints.Count));
                     DisplayMessage(string.Format(InfoCmdL10n.InfoActiveCheckpoint, snapshotDir.LocalCheckpoint!.Ordinal, snapshotDir.LocalCheckpoint.Latest));
                     if (null != snapshotDir.SharedCheckpoint)

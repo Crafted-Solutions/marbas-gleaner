@@ -26,17 +26,20 @@ namespace CraftedSolutions.MarBasGleaner.Commands
         {
             protected readonly ILogger _logger;
             protected readonly ITrackingService _trackingService;
+            protected readonly IFeedbackService _feedbackService;
 
-            public Worker(ITrackingService trackingService, ILogger<Worker> logger)
+            public Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger<Worker> logger)
             {
                 _logger = logger;
                 _trackingService = trackingService;
+                _feedbackService = feedbackService;
             }
 
-            protected Worker(ITrackingService trackingService, ILogger logger)
+            protected Worker(ITrackingService trackingService, IFeedbackService feedbackService, ILogger logger)
             {
                 _logger = logger;
                 _trackingService = trackingService;
+                _feedbackService = feedbackService;
             }
 
             public string Directory { get; set; } = SnapshotDirectory.DefaultPath;
@@ -86,6 +89,48 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                 }
                 return result;
             }
+
+            protected int ValidateSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true, bool requiresCheckpoint = true)
+            {
+                if (!snapshotDir.IsSnapshot || !snapshotDir.IsReady)
+                {
+                    return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorReadyState, snapshotDir.FullPath));
+                }
+                if (null != snapshotDir.Snapshot && snapshotDir.Snapshot.Version != Snapshot.SupportedVersion)
+                {
+                    return ReportError(CmdResultCode.SnapshotVersionError, string.Format(GenericCmdL10n.ErrorSnapshotVersion, snapshotDir.FullPath, snapshotDir.Snapshot.Version, Snapshot.SupportedVersion));
+                }
+                if (mustBeConnected && !snapshotDir.IsConnected)
+                {
+                    return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorConnectedState, snapshotDir.FullPath));
+                }
+                if (requiresCheckpoint && (mustBeConnected && null == snapshotDir.LocalCheckpoint || null == snapshotDir.SharedCheckpoint))
+                {
+                    return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorCheckpointMissing, SnapshotDirectory.LocalStateFileName));
+                }
+                return 0;
+            }
+
+            internal int ReportError(CmdResultCode error, string message)
+            {
+                _feedbackService.DisplayError(message);
+                return (int)error;
+            }
+
+            internal void DisplayInfo(string message)
+            {
+                _feedbackService.DisplayInfo(message);
+            }
+
+            internal void DisplayWarning(string message)
+            {
+                _feedbackService.DisplayWarning(message);
+            }
+
+            internal void DisplayMessage(string message, MessageSeparatorOption separatorOption = MessageSeparatorOption.None)
+            {
+                _feedbackService.DisplayMessage(message, separatorOption);
+            }
         }
 
         internal static TResult? ParseStringConstructible<TResult>(SymbolResult result)
@@ -113,48 +158,6 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                     , (string.IsNullOrEmpty(e.InnerException.Message) ? $"unexpected error: {e.InnerException}" : e.InnerException.Message)));
                 return null;
             }
-        }
-
-        internal static int ReportError(CmdResultCode error, string message)
-        {
-            ConsoleFeedbackService.WriteError(message);
-            return (int)error;
-        }
-
-        internal static void DisplayInfo(string message)
-        {
-            ConsoleFeedbackService.WriteInfo(message);
-        }
-
-        internal static void DisplayWarning(string message)
-        {
-            ConsoleFeedbackService.WriteWarning(message);
-        }
-
-        internal static void DisplayMessage(string message, MessageSeparatorOption separatorOption = MessageSeparatorOption.None)
-        {
-            ConsoleFeedbackService.WriteMessage(message, separatorOption);
-        }
-
-        protected static int ValidateSnapshot(SnapshotDirectory snapshotDir, bool mustBeConnected = true, bool requiresCheckpoint = true)
-        {
-            if (!snapshotDir.IsSnapshot || !snapshotDir.IsReady)
-            {
-                return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorReadyState, snapshotDir.FullPath));
-            }
-            if (null != snapshotDir.Snapshot && snapshotDir.Snapshot.Version != Snapshot.SupportedVersion)
-            {
-                return ReportError(CmdResultCode.SnapshotVersionError, string.Format(GenericCmdL10n.ErrorSnapshotVersion, snapshotDir.FullPath, snapshotDir.Snapshot.Version, Snapshot.SupportedVersion));
-            }
-            if (mustBeConnected && !snapshotDir.IsConnected)
-            {
-                return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorConnectedState, snapshotDir.FullPath));
-            }
-            if (requiresCheckpoint && (mustBeConnected && null == snapshotDir.LocalCheckpoint || null == snapshotDir.SharedCheckpoint))
-            {
-                return ReportError(CmdResultCode.SnapshotStateError, string.Format(GenericCmdL10n.ErrorCheckpointMissing, SnapshotDirectory.LocalStateFileName));
-            }
-            return 0;
         }
 
         internal struct ConnectionCheckResult

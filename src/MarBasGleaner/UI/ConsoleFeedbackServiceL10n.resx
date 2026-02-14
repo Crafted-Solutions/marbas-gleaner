@@ -117,58 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ChoiceConflictDiff" xml:space="preserve">
-    <value>Display differences and decide again</value>
+  <data name="MsgChooseOption" xml:space="preserve">
+    <value>Please choose an option {0}-{1}</value>
   </data>
-  <data name="ChoiceConflictKeep" xml:space="preserve">
-    <value>Keep snapshot version as current</value>
+  <data name="MsgEnterDefault" xml:space="preserve">
+    <value>(enter for {0})</value>
   </data>
-  <data name="ChoiceConflictManual" xml:space="preserve">
-    <value>Save broker version into a temporary file and resolve conflict manually</value>
+  <data name="MsgYesNo" xml:space="preserve">
+    <value>(y[es]/n[o])</value>
   </data>
-  <data name="ChoiceConflictTakeBroker" xml:space="preserve">
-    <value>Overwrite snapshot grain with the broker version</value>
-  </data>
-  <data name="CmdDesc" xml:space="preserve">
-    <value>Pulls modified and new grains from MarBas broker into snapshot</value>
-  </data>
-  <data name="ForceCheckpointOptionDesc" xml:space="preserve">
-    <value>Create new checkpoint even when it's safe using latest existing one</value>
-  </data>
-  <data name="MsgChooseOf4" xml:space="preserve">
-    <value>Please choose an option 1-4</value>
-  </data>
-  <data name="MsgCmdStart" xml:space="preserve">
-    <value>Pulling grains from {0} into snapshot {1}</value>
-  </data>
-  <data name="MsgCmdSuccess" xml:space="preserve">
-    <value>Integrated {0} changes into checkpont {1} of snapshot {2}</value>
-  </data>
-  <data name="MsgCmdSuccessNoop" xml:space="preserve">
-    <value>Snapshot {0} is already uptodate</value>
-  </data>
-  <data name="OverwriteOptionDesc" xml:space="preserve">
-    <value>Always overwrite grains even newer ones when pulling into snapshot</value>
-  </data>
-  <data name="StatusGrainConflict" xml:space="preserve">
-    <value>Both versions of grain {0:D} ({1}) have been modified (snapshot timestamp: {2:O}, broker timestamp: {3:O})</value>
-  </data>
-  <data name="StatusGrainDeleted" xml:space="preserve">
-    <value>Skipping deleted grain {0:D}</value>
-  </data>
-  <data name="StatusGrainPull" xml:space="preserve">
-    <value>Pulling missing grain {0:D} ({1})</value>
-  </data>
-  <data name="StatusGrainPurge" xml:space="preserve">
-    <value>Purging deleted grain {0:D} ({1})</value>
-  </data>
-  <data name="StatusGrainStored" xml:space="preserve">
-    <value>Grain {0:D} stored to {1}</value>
-  </data>
-  <data name="StatusGrainUpdate" xml:space="preserve">
-    <value>Updating grain {0:D} ({1})</value>
-  </data>
-  <data name="WarnUnpushedCheckpoint" xml:space="preserve">
-    <value>Snapshot {0} contains unpushed checkpoints, push them first</value>
+  <data name="PatternYesNo" xml:space="preserve">
+    <value>(?&lt;Confirm&gt;^y)|(?&lt;Reject&gt;^n)</value>
   </data>
 </root>

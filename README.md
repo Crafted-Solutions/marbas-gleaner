@@ -162,5 +162,17 @@ Options:
   --force-checkpoint                                                                            Create new checkpoint even when it's safe using latest existing one
 ```
 
+#### mbglean clean-up
+```
+Cleans up snapshot directory (correcting checkpoints, deleting orphans, pulling missing grains etc.)
+
+Usage:
+  mbglean clean-up [options]
+
+Options:
+  -d, --directory <directory>  Local directory containing tracking information [default: .]
+  -a, --unattended             In unattended mode no questions are asked, all clean-ups that can be applied safely without interactions will be applied
+```
+
 ## Contributing
 All contributions to development and error fixing are welcome. Please always use `develop` branch for forks and pull requests, `main` is reserved for stable releases and critical vulnarability fixes only. 
