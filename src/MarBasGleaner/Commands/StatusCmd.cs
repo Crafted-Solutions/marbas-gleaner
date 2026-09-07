@@ -175,12 +175,16 @@ namespace CraftedSolutions.MarBasGleaner.Commands
                         result = PrintGrainInfo(grain, GrainTrackingStatus.Missing) | result;
                     }
                 }
-                foreach (var id in conflated.Deletions)
+                if (0 < conflated.Deletions.Count)
                 {
-                    var grain = await client.GetGrain(id, false, cancellationToken);
-                    if (null != grain)
+                    var existing = (await client.CheckGrainsExist(conflated.Deletions, cancellationToken)).Where(x => x.Value);
+                    foreach (var (id, val) in existing)
                     {
-                        result = PrintGrainInfo(grain, GrainTrackingStatus.Deleted) | result;
+                        var grain = await client.GetGrain(id, false, cancellationToken);
+                        if (null != grain)
+                        {
+                            result = PrintGrainInfo(grain, GrainTrackingStatus.Deleted) | result;
+                        }
                     }
                 }
 
